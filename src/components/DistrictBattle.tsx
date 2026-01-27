@@ -1,4 +1,6 @@
-import { Trophy, TrendingUp, TrendingDown, Minus, Medal, Gift, Users } from "lucide-react";
+import { useState } from "react";
+import { Trophy, TrendingUp, TrendingDown, Minus, Medal, Gift, Users, ChevronDown, ChevronUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface District {
   id: string;
@@ -14,6 +16,7 @@ interface DistrictBattleProps {
   districts: District[];
   userDistrictId?: string;
   isLoading?: boolean;
+  initialVisibleCount?: number;
 }
 
 const getRankStyle = (rank: number) => {
@@ -32,7 +35,12 @@ const getChangeIcon = (rank: number, prevRank?: number) => {
   return <Minus className="w-4 h-4 text-muted-foreground" />;
 };
 
-export const DistrictBattle = ({ districts, userDistrictId, isLoading }: DistrictBattleProps) => {
+export const DistrictBattle = ({ districts, userDistrictId, isLoading, initialVisibleCount = 10 }: DistrictBattleProps) => {
+  const [showAll, setShowAll] = useState(false);
+  
+  const visibleDistricts = showAll ? districts : districts.slice(0, initialVisibleCount);
+  const hasMore = districts.length > initialVisibleCount;
+
   if (isLoading) {
     return (
       <div className="glass-card rounded-2xl p-6 shadow-elevated animate-pulse">
@@ -61,7 +69,7 @@ export const DistrictBattle = ({ districts, userDistrictId, isLoading }: Distric
 
       {/* Leaderboard */}
       <div className="space-y-3">
-        {districts.map((district) => (
+        {visibleDistricts.map((district) => (
           <div
             key={district.id}
             className={`flex items-center gap-4 p-3 rounded-xl transition-all hover:bg-muted/50 ${
@@ -106,6 +114,27 @@ export const DistrictBattle = ({ districts, userDistrictId, isLoading }: Distric
           </div>
         ))}
       </div>
+
+      {/* Show More / Show Less Button */}
+      {hasMore && (
+        <Button
+          variant="ghost"
+          className="w-full mt-4 text-muted-foreground hover:text-foreground"
+          onClick={() => setShowAll(!showAll)}
+        >
+          {showAll ? (
+            <>
+              <ChevronUp className="w-4 h-4 mr-2" />
+              Скрыть ({districts.length - initialVisibleCount})
+            </>
+          ) : (
+            <>
+              <ChevronDown className="w-4 h-4 mr-2" />
+              Показать ещё ({districts.length - initialVisibleCount})
+            </>
+          )}
+        </Button>
+      )}
     </div>
   );
 };
