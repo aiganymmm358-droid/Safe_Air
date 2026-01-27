@@ -25,34 +25,176 @@ const getStatusLabel = (status: Recommendation["status"]) => {
   }
 };
 
-const recommendations: Recommendation[] = [
-  {
-    icon: <Baby className="w-5 h-5" />,
-    group: "Дети",
-    status: "caution",
-    advice: "Ограничьте активные игры на улице до 1 часа",
-  },
-  {
-    icon: <Heart className="w-5 h-5" />,
-    group: "Пожилые",
-    status: "warning",
-    advice: "Рекомендуется оставаться дома, проветривать кратко",
-  },
-  {
-    icon: <Activity className="w-5 h-5" />,
-    group: "Астматики",
-    status: "warning",
-    advice: "Носите маску N95, имейте ингалятор при себе",
-  },
-  {
-    icon: <Bike className="w-5 h-5" />,
-    group: "Спортсмены",
-    status: "caution",
-    advice: "Перенесите тренировку в помещение или на утро",
-  },
-];
+// Dynamic recommendations based on AQI
+const getRecommendations = (aqi: number | null): Recommendation[] => {
+  if (aqi === null) {
+    // Default when no data
+    return [
+      {
+        icon: <Baby className="w-5 h-5" />,
+        group: "Дети",
+        status: "caution",
+        advice: "Загрузка данных о качестве воздуха...",
+      },
+    ];
+  }
 
-export const HealthRecommendations = () => {
+  if (aqi <= 50) {
+    // Good air quality
+    return [
+      {
+        icon: <Baby className="w-5 h-5" />,
+        group: "Дети",
+        status: "safe",
+        advice: "Безопасно для активных игр на улице",
+      },
+      {
+        icon: <Heart className="w-5 h-5" />,
+        group: "Пожилые",
+        status: "safe",
+        advice: "Отличное время для прогулок на свежем воздухе",
+      },
+      {
+        icon: <Activity className="w-5 h-5" />,
+        group: "Астматики",
+        status: "safe",
+        advice: "Можно заниматься активностями на улице",
+      },
+      {
+        icon: <Bike className="w-5 h-5" />,
+        group: "Спортсмены",
+        status: "safe",
+        advice: "Идеальные условия для тренировок",
+      },
+    ];
+  }
+
+  if (aqi <= 100) {
+    // Moderate
+    return [
+      {
+        icon: <Baby className="w-5 h-5" />,
+        group: "Дети",
+        status: "safe",
+        advice: "Можно гулять, но следите за самочувствием",
+      },
+      {
+        icon: <Heart className="w-5 h-5" />,
+        group: "Пожилые",
+        status: "caution",
+        advice: "Ограничьте длительное пребывание на улице",
+      },
+      {
+        icon: <Activity className="w-5 h-5" />,
+        group: "Астматики",
+        status: "caution",
+        advice: "Имейте ингалятор при себе, избегайте интенсивных нагрузок",
+      },
+      {
+        icon: <Bike className="w-5 h-5" />,
+        group: "Спортсмены",
+        status: "safe",
+        advice: "Можно тренироваться, лучше в утренние часы",
+      },
+    ];
+  }
+
+  if (aqi <= 150) {
+    // Unhealthy for sensitive groups
+    return [
+      {
+        icon: <Baby className="w-5 h-5" />,
+        group: "Дети",
+        status: "caution",
+        advice: "Ограничьте активные игры на улице до 1 часа",
+      },
+      {
+        icon: <Heart className="w-5 h-5" />,
+        group: "Пожилые",
+        status: "warning",
+        advice: "Рекомендуется оставаться дома, проветривать кратко",
+      },
+      {
+        icon: <Activity className="w-5 h-5" />,
+        group: "Астматики",
+        status: "warning",
+        advice: "Носите маску N95, имейте ингалятор при себе",
+      },
+      {
+        icon: <Bike className="w-5 h-5" />,
+        group: "Спортсмены",
+        status: "caution",
+        advice: "Перенесите тренировку в помещение или на утро",
+      },
+    ];
+  }
+
+  if (aqi <= 200) {
+    // Unhealthy
+    return [
+      {
+        icon: <Baby className="w-5 h-5" />,
+        group: "Дети",
+        status: "warning",
+        advice: "Избегайте прогулок, играйте дома",
+      },
+      {
+        icon: <Heart className="w-5 h-5" />,
+        group: "Пожилые",
+        status: "danger",
+        advice: "Оставайтесь дома, не открывайте окна",
+      },
+      {
+        icon: <Activity className="w-5 h-5" />,
+        group: "Астматики",
+        status: "danger",
+        advice: "Не выходите на улицу без крайней необходимости",
+      },
+      {
+        icon: <Bike className="w-5 h-5" />,
+        group: "Спортсмены",
+        status: "warning",
+        advice: "Тренировки только в помещении",
+      },
+    ];
+  }
+
+  // Hazardous (>200)
+  return [
+    {
+      icon: <Baby className="w-5 h-5" />,
+      group: "Дети",
+      status: "danger",
+      advice: "Категорически избегайте выхода на улицу",
+    },
+    {
+      icon: <Heart className="w-5 h-5" />,
+      group: "Пожилые",
+      status: "danger",
+      advice: "Опасно! Оставайтесь дома с закрытыми окнами",
+    },
+    {
+      icon: <Activity className="w-5 h-5" />,
+      group: "Астматики",
+      status: "danger",
+      advice: "Чрезвычайная опасность, используйте очиститель воздуха",
+    },
+    {
+      icon: <Bike className="w-5 h-5" />,
+      group: "Спортсмены",
+      status: "danger",
+      advice: "Отмените все тренировки, даже в помещении проветривать нельзя",
+    },
+  ];
+};
+
+interface HealthRecommendationsProps {
+  aqi?: number | null;
+}
+
+export const HealthRecommendations = ({ aqi = null }: HealthRecommendationsProps) => {
+  const recommendations = getRecommendations(aqi);
+
   return (
     <div className="glass-card rounded-2xl p-6 shadow-elevated animate-slide-up">
       <div className="flex items-center justify-between mb-6">
@@ -60,6 +202,9 @@ export const HealthRecommendations = () => {
           <Shield className="w-5 h-5 text-primary" />
           Рекомендации для здоровья
         </h3>
+        {aqi !== null && (
+          <span className="text-sm text-muted-foreground">AQI: {aqi}</span>
+        )}
       </div>
 
       <div className="space-y-3">
@@ -89,7 +234,7 @@ export const HealthRecommendations = () => {
       {/* Quick Action */}
       <button className="w-full mt-4 p-3 bg-primary/10 text-primary rounded-xl font-medium hover:bg-primary/20 transition-colors flex items-center justify-center gap-2">
         <AlertCircle className="w-4 h-4" />
-        Получить персональные рекомендации
+        Настроить уведомления о качестве воздуха
       </button>
     </div>
   );
