@@ -4,5 +4,4 @@ export { MapLegend } from './MapLegend';
 export { MapStatusBar } from './MapStatusBar';
 export { StationDetailsPanel } from './StationDetailsPanel';
 export { PollutionSourcePanel } from './PollutionSourcePanel';
-export { useMapMarkers } from './useMapMarkers';
 export { useUserLocation } from './useUserLocation';
