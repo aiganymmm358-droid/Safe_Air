@@ -48,31 +48,43 @@ export const useAirQualityData = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchStationsInBounds = useCallback(async (bounds: MapBounds) => {
+  const fetchStationsInBounds = useCallback(async (bounds: MapBounds, retries = 3) => {
     setIsLoading(true);
     setError(null);
 
-    try {
-      const { data, error: funcError } = await supabase.functions.invoke('waqi-data', {
-        body: { action: 'getStationsInBounds', bounds },
-      });
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        const { data, error: funcError } = await supabase.functions.invoke('waqi-data', {
+          body: { action: 'getStationsInBounds', bounds },
+        });
 
-      if (funcError) {
-        throw new Error(funcError.message);
+        if (funcError) {
+          throw new Error(funcError.message);
+        }
+
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to fetch stations');
+        }
+
+        setStations(data.data);
+        setError(null);
+        setIsLoading(false);
+        return;
+      } catch (err) {
+        console.warn(`Attempt ${attempt}/${retries} failed:`, err);
+        
+        if (attempt === retries) {
+          const errorMessage = err instanceof Error ? err.message : 'Failed to fetch air quality data';
+          setError(errorMessage);
+          console.error('Error fetching stations after retries:', err);
+        } else {
+          // Wait before retry (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        }
       }
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch stations');
-      }
-
-      setStations(data.data);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch air quality data';
-      setError(errorMessage);
-      console.error('Error fetching stations:', err);
-    } finally {
-      setIsLoading(false);
     }
+    
+    setIsLoading(false);
   }, []);
 
   const fetchStationDetails = useCallback(async (lat: number, lng: number) => {
