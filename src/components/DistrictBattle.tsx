@@ -1,22 +1,20 @@
-import { Trophy, TrendingUp, TrendingDown, Minus, Medal, Gift } from "lucide-react";
+import { Trophy, TrendingUp, TrendingDown, Minus, Medal, Gift, Users } from "lucide-react";
 
 interface District {
-  id: number;
+  id: string;
   name: string;
-  score: number;
-  change: "up" | "down" | "same";
-  trees: number;
-  reports: number;
-  rank: number;
+  total_score: number;
+  trees_planted: number;
+  reports_sent: number;
+  participants_count: number;
+  current_rank: number;
 }
 
-const districts: District[] = [
-  { id: 1, name: "Бостандыкский", score: 12450, change: "up", trees: 234, reports: 89, rank: 1 },
-  { id: 2, name: "Медеуский", score: 11230, change: "up", trees: 198, reports: 76, rank: 2 },
-  { id: 3, name: "Алмалинский", score: 10890, change: "down", trees: 167, reports: 92, rank: 3 },
-  { id: 4, name: "Наурызбайский", score: 9870, change: "same", trees: 145, reports: 54, rank: 4 },
-  { id: 5, name: "Ауэзовский", score: 9540, change: "up", trees: 189, reports: 67, rank: 5 },
-];
+interface DistrictBattleProps {
+  districts: District[];
+  userDistrictId?: string;
+  isLoading?: boolean;
+}
 
 const getRankStyle = (rank: number) => {
   switch (rank) {
@@ -27,21 +25,33 @@ const getRankStyle = (rank: number) => {
   }
 };
 
-const getChangeIcon = (change: District["change"]) => {
-  switch (change) {
-    case "up": return <TrendingUp className="w-4 h-4 text-aqi-good" />;
-    case "down": return <TrendingDown className="w-4 h-4 text-destructive" />;
-    case "same": return <Minus className="w-4 h-4 text-muted-foreground" />;
-  }
+const getChangeIcon = (rank: number, prevRank?: number) => {
+  if (!prevRank) return <Minus className="w-4 h-4 text-muted-foreground" />;
+  if (rank < prevRank) return <TrendingUp className="w-4 h-4 text-aqi-good" />;
+  if (rank > prevRank) return <TrendingDown className="w-4 h-4 text-destructive" />;
+  return <Minus className="w-4 h-4 text-muted-foreground" />;
 };
 
-export const DistrictBattle = () => {
+export const DistrictBattle = ({ districts, userDistrictId, isLoading }: DistrictBattleProps) => {
+  if (isLoading) {
+    return (
+      <div className="glass-card rounded-2xl p-6 shadow-elevated animate-pulse">
+        <div className="h-6 bg-muted rounded w-1/3 mb-6" />
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-16 bg-muted rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="glass-card rounded-2xl p-6 shadow-elevated animate-slide-up">
       <div className="flex items-center justify-between mb-6">
         <h3 className="font-display font-bold text-lg flex items-center gap-2">
           <Trophy className="w-5 h-5 text-accent" />
-          Битва районов
+          Рейтинг районов
         </h3>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Gift className="w-4 h-4" />
@@ -55,15 +65,15 @@ export const DistrictBattle = () => {
           <div
             key={district.id}
             className={`flex items-center gap-4 p-3 rounded-xl transition-all hover:bg-muted/50 ${
-              district.rank === 1 ? "bg-accent/10 border border-accent/20" : ""
-            }`}
+              district.current_rank === 1 ? "bg-accent/10 border border-accent/20" : ""
+            } ${userDistrictId === district.id ? "ring-2 ring-primary" : ""}`}
           >
             {/* Rank */}
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${getRankStyle(district.rank)}`}>
-              {district.rank <= 3 ? (
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${getRankStyle(district.current_rank)}`}>
+              {district.current_rank <= 3 ? (
                 <Medal className="w-4 h-4" />
               ) : (
-                district.rank
+                district.current_rank
               )}
             </div>
 
@@ -71,34 +81,30 @@ export const DistrictBattle = () => {
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <span className="font-semibold">{district.name}</span>
-                {getChangeIcon(district.change)}
+                {userDistrictId === district.id && (
+                  <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
+                    Ваш район
+                  </span>
+                )}
+                {getChangeIcon(district.current_rank)}
               </div>
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <span>🌳 {district.trees} деревьев</span>
-                <span>📢 {district.reports} репортов</span>
+                <span className="flex items-center gap-1">
+                  <Users className="w-3 h-3" />
+                  {district.participants_count}
+                </span>
+                <span>🌳 {district.trees_planted}</span>
+                <span>📢 {district.reports_sent}</span>
               </div>
             </div>
 
             {/* Score */}
             <div className="text-right">
-              <p className="font-display font-bold text-lg">{district.score.toLocaleString()}</p>
+              <p className="font-display font-bold text-lg">{district.total_score.toLocaleString()}</p>
               <p className="text-xs text-muted-foreground">очков</p>
             </div>
           </div>
         ))}
-      </div>
-
-      {/* Your district */}
-      <div className="mt-6 p-4 bg-primary/10 rounded-xl border border-primary/20">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">Ваш район</p>
-            <p className="font-semibold text-primary">Бостандыкский — #1 🏆</p>
-          </div>
-          <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors">
-            Участвовать
-          </button>
-        </div>
       </div>
     </div>
   );
