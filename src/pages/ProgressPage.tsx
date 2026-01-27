@@ -1,7 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { GamificationPanel } from "@/components/GamificationPanel";
-import { Trophy, Target, Gift, Calendar, TrendingUp, CheckCircle2, Circle, Loader2, Flame, Star } from "lucide-react";
+import { Trophy, Target, TrendingUp, CheckCircle2, Circle, Loader2, Flame, Star } from "lucide-react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useUserProgress } from "@/hooks/useUserProgress";
 import { Button } from "@/components/ui/button";
@@ -24,12 +24,15 @@ const ProgressPage = () => {
     updateStreak,
   } = useUserProgress();
 
-  // Update streak on page load
+  const streakUpdatedRef = useRef(false);
+
+  // Update streak only once on mount
   useEffect(() => {
-    if (isAuthenticated && progress) {
+    if (isAuthenticated && !streakUpdatedRef.current) {
+      streakUpdatedRef.current = true;
       updateStreak();
     }
-  }, [isAuthenticated, progress]);
+  }, [isAuthenticated]);
 
   // Show login prompt if not authenticated
   if (!authLoading && !isAuthenticated) {
