@@ -1,7 +1,16 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { QuickActions } from "@/components/QuickActions";
-import { Zap, AlertTriangle, Route, GraduationCap, TreePine, Camera, FileText, Phone } from "lucide-react";
+import { Zap, AlertTriangle, Route, GraduationCap, TreePine, Phone } from "lucide-react";
+import { ReportViolationDialog, SafeRouteDialog, EcoLessonsDialog, TreePlantingDialog } from "@/components/quick-actions";
 
 const ActionsPage = () => {
+  const navigate = useNavigate();
+  const [reportOpen, setReportOpen] = useState(false);
+  const [routeOpen, setRouteOpen] = useState(false);
+  const [educationOpen, setEducationOpen] = useState(false);
+  const [plantOpen, setPlantOpen] = useState(false);
+
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       {/* Page Header */}
@@ -38,7 +47,10 @@ const ActionsPage = () => {
               <span className="px-3 py-1 bg-muted rounded-full text-xs">🏗️ Строительная пыль</span>
             </div>
           </div>
-          <button className="w-full py-3 bg-destructive text-destructive-foreground rounded-xl font-medium hover:bg-destructive/90 transition-colors">
+          <button 
+            onClick={() => setReportOpen(true)}
+            className="w-full py-3 bg-destructive text-destructive-foreground rounded-xl font-medium hover:bg-destructive/90 transition-colors"
+          >
             Создать репорт (+50 XP)
           </button>
         </div>
@@ -55,22 +67,14 @@ const ActionsPage = () => {
             </div>
           </div>
           <div className="space-y-3 mb-4">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Откуда"
-                className="flex-1 px-4 py-2 bg-muted rounded-lg text-sm"
-              />
-            </div>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Куда"
-                className="flex-1 px-4 py-2 bg-muted rounded-lg text-sm"
-              />
-            </div>
+            <p className="text-sm text-muted-foreground">
+              Алгоритм учитывает текущие данные о качестве воздуха и предлагает маршрут через парковые зоны.
+            </p>
           </div>
-          <button className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors">
+          <button 
+            onClick={() => setRouteOpen(true)}
+            className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors"
+          >
             Построить маршрут
           </button>
         </div>
@@ -100,7 +104,10 @@ const ActionsPage = () => {
               <span className="text-xs text-aqi-good">+25 XP</span>
             </div>
           </div>
-          <button className="w-full py-3 bg-secondary text-secondary-foreground rounded-xl font-medium hover:bg-secondary/90 transition-colors">
+          <button 
+            onClick={() => setEducationOpen(true)}
+            className="w-full py-3 bg-secondary text-secondary-foreground rounded-xl font-medium hover:bg-secondary/90 transition-colors"
+          >
             Начать обучение
           </button>
         </div>
@@ -122,11 +129,14 @@ const ActionsPage = () => {
                 <span className="font-medium text-sm">🌳 Акция «Зелёный город»</span>
                 <span className="text-xs text-aqi-good">+100 XP</span>
               </div>
-              <p className="text-xs text-muted-foreground">25 января, Центральный парк</p>
+              <p className="text-xs text-muted-foreground">1 февраля, Центральный парк</p>
               <p className="text-xs text-muted-foreground">42 участника записались</p>
             </div>
           </div>
-          <button className="w-full py-3 bg-aqi-good text-white rounded-xl font-medium hover:bg-aqi-good/90 transition-colors">
+          <button 
+            onClick={() => setPlantOpen(true)}
+            className="w-full py-3 bg-aqi-good text-white rounded-xl font-medium hover:bg-aqi-good/90 transition-colors"
+          >
             Записаться на акцию
           </button>
         </div>
@@ -141,18 +151,24 @@ const ActionsPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 bg-muted/50 rounded-xl">
             <p className="font-medium">Экологическая инспекция</p>
-            <p className="text-lg font-bold text-primary">+7 727 261-99-05</p>
+            <a href="tel:+77272619905" className="text-lg font-bold text-primary hover:underline">+7 727 261-99-05</a>
           </div>
           <div className="p-4 bg-muted/50 rounded-xl">
             <p className="font-medium">МЧС Казахстан</p>
-            <p className="text-lg font-bold text-destructive">112</p>
+            <a href="tel:112" className="text-lg font-bold text-destructive hover:underline">112</a>
           </div>
           <div className="p-4 bg-muted/50 rounded-xl">
             <p className="font-medium">Горячая линия Акимата</p>
-            <p className="text-lg font-bold text-secondary">109</p>
+            <a href="tel:109" className="text-lg font-bold text-secondary hover:underline">109</a>
           </div>
         </div>
       </div>
+
+      {/* Dialogs */}
+      <ReportViolationDialog open={reportOpen} onOpenChange={setReportOpen} />
+      <SafeRouteDialog open={routeOpen} onOpenChange={setRouteOpen} />
+      <EcoLessonsDialog open={educationOpen} onOpenChange={setEducationOpen} />
+      <TreePlantingDialog open={plantOpen} onOpenChange={setPlantOpen} />
     </div>
   );
 };
