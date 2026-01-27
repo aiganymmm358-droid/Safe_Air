@@ -268,6 +268,57 @@ export function useUserProgress() {
     }
   };
 
+  // Uncomplete a task (revert completion)
+  const uncompleteTask = async (taskId: string) => {
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const task = state.dailyTasks.find(t => t.task_id === taskId);
+    if (!task || !task.is_completed) {
+      return { success: false, error: 'Задание не найдено или не было выполнено' };
+    }
+
+    try {
+      // Mark task as not completed
+      const { error: updateError } = await supabase
+        .from('user_daily_tasks')
+        .update({
+          is_completed: false,
+          completed_at: null,
+        })
+        .eq('id', task.id);
+
+      if (updateError) throw updateError;
+
+      // Deduct XP and coins from progress
+      const { error: progressError } = await supabase
+        .from('user_progress')
+        .update({
+          xp: Math.max(0, (state.progress?.xp || 0) - task.xp_reward),
+          eco_coins: Math.max(0, (state.progress?.eco_coins || 0) - task.coin_reward),
+          total_xp_earned: Math.max(0, (state.progress?.total_xp_earned || 0) - task.xp_reward),
+          total_coins_earned: Math.max(0, (state.progress?.total_coins_earned || 0) - task.coin_reward),
+        })
+        .eq('user_id', user.id);
+
+      if (progressError) throw progressError;
+
+      // Log the revert action
+      await supabase.from('user_actions').insert({
+        user_id: user.id,
+        action_type: 'task_uncomplete',
+        action_description: `Отменено выполнение: ${task.task_name}`,
+        xp_earned: -task.xp_reward,
+        coins_earned: -task.coin_reward,
+      });
+
+      await fetchProgress();
+      return { success: true };
+    } catch (error) {
+      console.error('Error uncompleting task:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Не удалось отменить выполнение' };
+    }
+  };
+
   // Check and award achievements
   const checkAchievements = async () => {
     if (!user || !state.progress) return;
@@ -396,6 +447,7 @@ export function useUserProgress() {
     ...state,
     addXP,
     completeTask,
+    uncompleteTask,
     removeTask,
     updateStreak,
     unlockAchievement,

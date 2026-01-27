@@ -17,6 +17,7 @@ const ProgressPage = () => {
     recentActions,
     isLoading,
     completeTask,
+    uncompleteTask,
     refreshProgress,
     updateStreak,
   } = useUserProgress();
@@ -96,6 +97,7 @@ const ProgressPage = () => {
           dailyTasks={dailyTasks}
           onTaskAdded={refreshProgress}
           onTaskCompleted={completeTask}
+          onTaskUncompleted={uncompleteTask}
           onTaskRemoved={refreshProgress}
         />
       </div>

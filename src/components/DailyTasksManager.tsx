@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Check, X, Target, Sparkles, Clock, Shield } from 'lucide-react';
+import { Plus, Check, X, Target, Sparkles, Clock, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -37,15 +37,17 @@ interface DailyTasksManagerProps {
   dailyTasks: DailyTask[];
   onTaskAdded: () => void;
   onTaskCompleted: (taskId: string, note?: string) => Promise<{ success: boolean; leveledUp?: boolean; newLevel?: number; error?: string }>;
+  onTaskUncompleted: (taskId: string) => Promise<{ success: boolean; error?: string }>;
   onTaskRemoved: () => void;
 }
 
-export function DailyTasksManager({ dailyTasks, onTaskAdded, onTaskCompleted, onTaskRemoved }: DailyTasksManagerProps) {
+export function DailyTasksManager({ dailyTasks, onTaskAdded, onTaskCompleted, onTaskUncompleted, onTaskRemoved }: DailyTasksManagerProps) {
   const { user } = useAuthContext();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('daily');
   const [addingTaskId, setAddingTaskId] = useState<string | null>(null);
   const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
+  const [uncompletingTaskId, setUncompletingTaskId] = useState<string | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [taskToComplete, setTaskToComplete] = useState<{ id: string; name: string } | null>(null);
 
@@ -131,6 +133,20 @@ export function DailyTasksManager({ dailyTasks, onTaskAdded, onTaskCompleted, on
     } finally {
       setCompletingTaskId(null);
       setTaskToComplete(null);
+    }
+  };
+
+  const handleUncompleteTask = async (taskId: string) => {
+    setUncompletingTaskId(taskId);
+    try {
+      const result = await onTaskUncompleted(taskId);
+      if (result.success) {
+        toast.success('Выполнение задания отменено');
+      } else {
+        toast.error(result.error || 'Не удалось отменить выполнение');
+      }
+    } finally {
+      setUncompletingTaskId(null);
     }
   };
 
@@ -292,10 +308,25 @@ export function DailyTasksManager({ dailyTasks, onTaskAdded, onTaskCompleted, on
                 {/* Actions */}
                 <div className="flex items-center gap-2">
                   {task.is_completed ? (
-                    <Badge className="bg-primary text-primary-foreground">
-                      <Check className="w-3 h-3 mr-1" />
-                      Готово
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-primary text-primary-foreground">
+                        <Check className="w-3 h-3 mr-1" />
+                        Готово
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleUncompleteTask(task.task_id)}
+                        disabled={uncompletingTaskId === task.task_id}
+                        title="Отменить выполнение"
+                      >
+                        {uncompletingTaskId === task.task_id ? (
+                          <span className="animate-spin">⏳</span>
+                        ) : (
+                          <RotateCcw className="w-4 h-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
                   ) : (
                     <>
                       <Button
