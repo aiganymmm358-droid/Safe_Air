@@ -123,9 +123,10 @@ export function LocationWidget() {
 
           {environmentData.wind_speed !== null && (
             <Tooltip>
-              <TooltipTrigger className="flex items-center gap-1">
-                <Wind className="w-3.5 h-3.5" />
-                <span>{Math.round(environmentData.wind_speed)} км/ч</span>
+              <TooltipTrigger className="flex items-center gap-0.5">
+                <Wind className="w-3 h-3" />
+                <span className="tabular-nums">{Math.round(environmentData.wind_speed)}</span>
+                <span className="text-xs">км/ч</span>
               </TooltipTrigger>
               <TooltipContent>
                 <p>Скорость ветра</p>
