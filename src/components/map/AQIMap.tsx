@@ -113,10 +113,13 @@ export const AQIMap = ({ className = '' }: AQIMapProps) => {
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
+    // Center on Kazakhstan with wider view to show multiple cities
     const map = L.map(mapRef.current, {
-      center: [43.238949, 76.945465],
-      zoom: 12,
+      center: [48.0, 67.0], // Center of Kazakhstan
+      zoom: 5, // Wide zoom to show all cities
       zoomControl: false,
+      minZoom: 3,
+      maxZoom: 18,
     });
 
     // Add tile layer - CartoDB Positron for clean look
