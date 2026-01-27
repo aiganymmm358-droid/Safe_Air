@@ -223,6 +223,18 @@ export const SocialFeed = ({ onRefreshNeeded }: SocialFeedProps) => {
                 {/* Content */}
                 <p className="text-sm mb-3">{post.content}</p>
 
+                {/* Post image */}
+                {post.image_url && (
+                  <div className="mb-3">
+                    <img 
+                      src={post.image_url} 
+                      alt="Post image" 
+                      className="rounded-lg max-h-64 w-auto object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                )}
+
                 {/* Impact badge */}
                 {post.impact_description && (
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium mb-4">
