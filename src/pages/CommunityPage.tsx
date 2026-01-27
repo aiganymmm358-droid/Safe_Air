@@ -1,7 +1,26 @@
+import { useState } from "react";
 import { SocialFeed } from "@/components/SocialFeed";
+import { CreatePostDialog } from "@/components/CreatePostDialog";
 import { Users, TrendingUp, Award, MessageCircle, Plus } from "lucide-react";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { useCommunityPosts } from "@/hooks/useCommunityPosts";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const CommunityPage = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuthContext();
+  const { refreshPosts } = useCommunityPosts();
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
+  const handleCreatePost = () => {
+    if (!isAuthenticated) {
+      navigate('/auth');
+      return;
+    }
+    setCreateDialogOpen(true);
+  };
+
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       {/* Page Header */}
@@ -13,10 +32,10 @@ const CommunityPage = () => {
           </h1>
           <p className="text-muted-foreground mt-1">Вместе за чистый воздух</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors">
+        <Button onClick={handleCreatePost} className="gap-2">
           <Plus className="w-4 h-4" />
           Создать пост
-        </button>
+        </Button>
       </div>
 
       {/* Community Stats */}
@@ -126,6 +145,13 @@ const CommunityPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Create Post Dialog */}
+      <CreatePostDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onPostCreated={refreshPosts}
+      />
     </div>
   );
 };
