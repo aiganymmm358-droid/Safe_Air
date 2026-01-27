@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Camera, Wind, Thermometer, Droplets, Loader2, RefreshCw, AlertTriangle, Upload, X, ImageIcon } from 'lucide-react';
+import { Camera, Wind, Thermometer, Droplets, Loader2, RefreshCw, AlertTriangle, Upload, X, ImageIcon, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useGeolocationContext } from '@/contexts/GeolocationContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -35,14 +36,38 @@ export function ARScannerDialog({ open, onOpenChange }: ARScannerDialogProps) {
   const { user } = useAuthContext();
   const { location, requestLocation, isLoading: locationLoading } = useGeolocationContext();
   const [isScanning, setIsScanning] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
   const [analysis, setAnalysis] = useState<AirAnalysis | null>(null);
   const [hasScanned, setHasScanned] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [isImageValidated, setIsImageValidated] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const validateImage = async (base64Image: string): Promise<{ isValid: boolean; reason?: string }> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-ar-image', {
+        body: { imageBase64: base64Image }
+      });
+
+      if (error) {
+        console.error('Validation error:', error);
+        return { isValid: true }; // Fallback: accept if validation fails
+      }
+
+      return {
+        isValid: data.isValid,
+        reason: data.reason
+      };
+    } catch (err) {
+      console.error('Validation request failed:', err);
+      return { isValid: true }; // Fallback: accept if request fails
+    }
+  };
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -56,15 +81,36 @@ export function ARScannerDialog({ open, onOpenChange }: ARScannerDialogProps) {
       return;
     }
 
+    setValidationError(null);
+    setIsImageValidated(false);
     setImageFile(file);
+
     const reader = new FileReader();
-    reader.onload = (e) => setImagePreview(e.target?.result as string);
+    reader.onload = async (e) => {
+      const base64 = e.target?.result as string;
+      setImagePreview(base64);
+
+      // Validate image with AI
+      setIsValidating(true);
+      const validation = await validateImage(base64);
+      setIsValidating(false);
+
+      if (!validation.isValid) {
+        setValidationError(validation.reason || 'Фото не подходит для анализа');
+        setIsImageValidated(false);
+      } else {
+        setIsImageValidated(true);
+        toast.success('Фото подходит для анализа!');
+      }
+    };
     reader.readAsDataURL(file);
   };
 
   const removeImage = () => {
     setImageFile(null);
     setImagePreview(null);
+    setValidationError(null);
+    setIsImageValidated(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -189,6 +235,8 @@ export function ARScannerDialog({ open, onOpenChange }: ARScannerDialogProps) {
     setScanProgress(0);
     setImagePreview(null);
     setImageFile(null);
+    setValidationError(null);
+    setIsImageValidated(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -211,18 +259,20 @@ export function ARScannerDialog({ open, onOpenChange }: ARScannerDialogProps) {
             <div className="space-y-4">
               {/* Image upload area */}
               <div className="aspect-video bg-gradient-to-br from-accent/20 to-primary/20 rounded-xl flex items-center justify-center relative overflow-hidden">
-                {isScanning ? (
+                {isScanning || isValidating ? (
                   <div className="text-center">
                     <div className="w-24 h-24 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-sm text-muted-foreground">Анализ изображения...</p>
-                    <p className="text-2xl font-bold mt-2">{scanProgress}%</p>
+                    <p className="text-sm text-muted-foreground">
+                      {isValidating ? 'Проверка изображения...' : 'Анализ изображения...'}
+                    </p>
+                    {isScanning && <p className="text-2xl font-bold mt-2">{scanProgress}%</p>}
                   </div>
                 ) : imagePreview ? (
                   <div className="relative w-full h-full">
                     <img 
                       src={imagePreview} 
                       alt="Preview" 
-                      className="w-full h-full object-cover"
+                      className={`w-full h-full object-cover ${validationError ? 'opacity-50' : ''}`}
                     />
                     <button
                       type="button"
@@ -231,6 +281,13 @@ export function ARScannerDialog({ open, onOpenChange }: ARScannerDialogProps) {
                     >
                       <X className="w-4 h-4" />
                     </button>
+                    {/* Validation status overlay */}
+                    {isImageValidated && (
+                      <div className="absolute bottom-2 left-2 px-2 py-1 bg-aqi-good/90 text-white text-xs rounded-full flex items-center gap-1">
+                        <Camera className="w-3 h-3" />
+                        Фото подходит
+                      </div>
+                    )}
                     {/* Scanning overlay effect */}
                     <div className="absolute inset-0 bg-gradient-to-b from-accent/10 to-transparent pointer-events-none" />
                   </div>
@@ -252,7 +309,7 @@ export function ARScannerDialog({ open, onOpenChange }: ARScannerDialogProps) {
                         <ImageIcon className="w-10 h-10 text-accent" />
                       </div>
                       <p className="text-muted-foreground font-medium">Загрузите фото для анализа</p>
-                      <p className="text-xs text-muted-foreground mt-1">или нажмите кнопку ниже</p>
+                      <p className="text-xs text-muted-foreground mt-1">Фото неба, улицы или природы</p>
                     </label>
                   </div>
                 )}
@@ -266,43 +323,65 @@ export function ARScannerDialog({ open, onOpenChange }: ARScannerDialogProps) {
                 )}
               </div>
 
+              {/* Validation error */}
+              {validationError && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    {validationError}. Пожалуйста, загрузите фото неба, улицы или природы.
+                  </AlertDescription>
+                </Alert>
+              )}
+
               {isScanning && <Progress value={scanProgress} className="h-2" />}
 
               <div className="flex gap-2">
-                {!imagePreview && (
+                {!imagePreview ? (
                   <Button 
                     variant="outline"
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={isScanning || locationLoading}
+                    disabled={isScanning || isValidating || locationLoading}
                     className="flex-1"
                   >
                     <Upload className="w-4 h-4 mr-2" />
                     Выбрать фото
                   </Button>
-                )}
+                ) : validationError ? (
+                  <Button 
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isScanning || isValidating || locationLoading}
+                    className="flex-1"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Выбрать другое фото
+                  </Button>
+                ) : null}
                 
-                <Button 
-                  onClick={startScan} 
-                  disabled={isScanning || locationLoading}
-                  className="flex-1"
-                >
-                  {locationLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Определение...
-                    </>
-                  ) : isScanning ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Анализ...
-                    </>
-                  ) : (
-                    <>
-                      <Camera className="w-4 h-4 mr-2" />
-                      {imagePreview ? 'Анализировать фото' : 'Сканировать'}
-                    </>
-                  )}
-                </Button>
+                {imagePreview && isImageValidated && (
+                  <Button 
+                    onClick={startScan} 
+                    disabled={isScanning || isValidating || locationLoading || !isImageValidated}
+                    className="flex-1"
+                  >
+                    {locationLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Определение...
+                      </>
+                    ) : isScanning ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Анализ...
+                      </>
+                    ) : (
+                      <>
+                        <Camera className="w-4 h-4 mr-2" />
+                        Анализировать фото
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
             </div>
           ) : (
