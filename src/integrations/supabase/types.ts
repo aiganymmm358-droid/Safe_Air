@@ -44,6 +44,153 @@ export type Database = {
         }
         Relationships: []
       }
+      user_achievements: {
+        Row: {
+          achievement_description: string | null
+          achievement_icon: string | null
+          achievement_id: string
+          achievement_name: string
+          id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_description?: string | null
+          achievement_icon?: string | null
+          achievement_id: string
+          achievement_name: string
+          id?: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_description?: string | null
+          achievement_icon?: string | null
+          achievement_id?: string
+          achievement_name?: string
+          id?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_actions: {
+        Row: {
+          action_description: string | null
+          action_type: string
+          coins_earned: number | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          user_id: string
+          xp_earned: number | null
+        }
+        Insert: {
+          action_description?: string | null
+          action_type: string
+          coins_earned?: number | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          user_id: string
+          xp_earned?: number | null
+        }
+        Update: {
+          action_description?: string | null
+          action_type?: string
+          coins_earned?: number | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string
+          xp_earned?: number | null
+        }
+        Relationships: []
+      }
+      user_daily_tasks: {
+        Row: {
+          coin_reward: number
+          completed_at: string | null
+          id: string
+          is_completed: boolean
+          task_date: string
+          task_description: string | null
+          task_id: string
+          task_name: string
+          user_id: string
+          xp_reward: number
+        }
+        Insert: {
+          coin_reward?: number
+          completed_at?: string | null
+          id?: string
+          is_completed?: boolean
+          task_date?: string
+          task_description?: string | null
+          task_id: string
+          task_name: string
+          user_id: string
+          xp_reward?: number
+        }
+        Update: {
+          coin_reward?: number
+          completed_at?: string | null
+          id?: string
+          is_completed?: boolean
+          task_date?: string
+          task_description?: string | null
+          task_id?: string
+          task_name?: string
+          user_id?: string
+          xp_reward?: number
+        }
+        Relationships: []
+      }
+      user_progress: {
+        Row: {
+          created_at: string
+          eco_coins: number
+          id: string
+          last_activity_date: string | null
+          level: number
+          streak_days: number
+          total_coins_earned: number
+          total_xp_earned: number
+          updated_at: string
+          user_id: string
+          xp: number
+          xp_to_next_level: number
+        }
+        Insert: {
+          created_at?: string
+          eco_coins?: number
+          id?: string
+          last_activity_date?: string | null
+          level?: number
+          streak_days?: number
+          total_coins_earned?: number
+          total_xp_earned?: number
+          updated_at?: string
+          user_id: string
+          xp?: number
+          xp_to_next_level?: number
+        }
+        Update: {
+          created_at?: string
+          eco_coins?: number
+          id?: string
+          last_activity_date?: string | null
+          level?: number
+          streak_days?: number
+          total_coins_earned?: number
+          total_xp_earned?: number
+          updated_at?: string
+          user_id?: string
+          xp?: number
+          xp_to_next_level?: number
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -103,6 +250,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_user_xp: {
+        Args: {
+          _action_type?: string
+          _coins?: number
+          _description?: string
+          _user_id: string
+          _xp: number
+        }
+        Returns: {
+          leveled_up: boolean
+          new_coins: number
+          new_level: number
+          new_xp: number
+        }[]
+      }
       get_current_user_id: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -115,6 +277,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: undefined
       }
+      update_user_streak: { Args: { _user_id: string }; Returns: number }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
