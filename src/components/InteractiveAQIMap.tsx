@@ -15,12 +15,12 @@ L.Icon.Default.mergeOptions({
 });
 
 const getAQIColor = (aqi: number): string => {
-  if (aqi <= 50) return '#22c55e'; // Good - green
-  if (aqi <= 100) return '#eab308'; // Moderate - yellow
-  if (aqi <= 150) return '#f97316'; // Unhealthy for sensitive - orange
-  if (aqi <= 200) return '#ef4444'; // Unhealthy - red
-  if (aqi <= 300) return '#a855f7'; // Very unhealthy - purple
-  return '#7f1d1d'; // Hazardous - dark red
+  if (aqi <= 50) return '#22c55e';
+  if (aqi <= 100) return '#eab308';
+  if (aqi <= 150) return '#f97316';
+  if (aqi <= 200) return '#ef4444';
+  if (aqi <= 300) return '#a855f7';
+  return '#7f1d1d';
 };
 
 const getAQILabel = (aqi: number): string => {
@@ -61,54 +61,47 @@ const createAQIIcon = (aqi: number) => {
   });
 };
 
-interface MapEventsProps {
+interface MapBoundsHandlerProps {
   onBoundsChange: (bounds: { north: number; south: number; east: number; west: number }) => void;
 }
 
-const MapEvents = ({ onBoundsChange }: MapEventsProps) => {
-  const map = useMapEvents({
-    moveend: () => {
-      const bounds = map.getBounds();
-      onBoundsChange({
-        north: bounds.getNorth(),
-        south: bounds.getSouth(),
-        east: bounds.getEast(),
-        west: bounds.getWest(),
-      });
-    },
-    zoomend: () => {
-      const bounds = map.getBounds();
-      onBoundsChange({
-        north: bounds.getNorth(),
-        south: bounds.getSouth(),
-        east: bounds.getEast(),
-        west: bounds.getWest(),
-      });
-    },
-  });
+function MapBoundsHandler({ onBoundsChange }: MapBoundsHandlerProps) {
+  const map = useMap();
 
-  // Initial bounds fetch
   useEffect(() => {
-    const bounds = map.getBounds();
-    onBoundsChange({
-      north: bounds.getNorth(),
-      south: bounds.getSouth(),
-      east: bounds.getEast(),
-      west: bounds.getWest(),
-    });
-  }, []);
+    const handleMoveEnd = () => {
+      const bounds = map.getBounds();
+      onBoundsChange({
+        north: bounds.getNorth(),
+        south: bounds.getSouth(),
+        east: bounds.getEast(),
+        west: bounds.getWest(),
+      });
+    };
+
+    // Initial fetch
+    handleMoveEnd();
+
+    map.on('moveend', handleMoveEnd);
+    map.on('zoomend', handleMoveEnd);
+
+    return () => {
+      map.off('moveend', handleMoveEnd);
+      map.off('zoomend', handleMoveEnd);
+    };
+  }, [map, onBoundsChange]);
 
   return null;
-};
+}
 
-interface StationPopupProps {
+interface StationPopupContentProps {
   station: AQIStation;
   details: StationDetails | null;
   onLoadDetails: () => void;
   isLoading: boolean;
 }
 
-const StationPopup = ({ station, details, onLoadDetails, isLoading }: StationPopupProps) => {
+function StationPopupContent({ station, details, onLoadDetails, isLoading }: StationPopupContentProps) {
   const color = getAQIColor(station.aqi);
   const label = getAQILabel(station.aqi);
 
@@ -138,7 +131,6 @@ const StationPopup = ({ station, details, onLoadDetails, isLoading }: StationPop
             Обновлено: {new Date(details.time).toLocaleString('ru-RU')}
           </p>
           
-          {/* Pollutants */}
           <div className="grid grid-cols-2 gap-2">
             {details.pollutants.pm25 !== undefined && (
               <div className="bg-muted/50 rounded p-2">
@@ -166,7 +158,6 @@ const StationPopup = ({ station, details, onLoadDetails, isLoading }: StationPop
             )}
           </div>
 
-          {/* Weather */}
           {(details.weather.temperature !== undefined || details.weather.humidity !== undefined) && (
             <div className="flex gap-3 text-xs text-muted-foreground mt-2">
               {details.weather.temperature !== undefined && (
@@ -210,10 +201,9 @@ const StationPopup = ({ station, details, onLoadDetails, isLoading }: StationPop
       )}
     </div>
   );
-};
+}
 
-// Legend Component
-const AQILegend = () => {
+function AQILegend() {
   const levels = [
     { range: '0-50', label: 'Отлично', color: '#22c55e' },
     { range: '51-100', label: 'Умеренно', color: '#eab308' },
@@ -240,9 +230,58 @@ const AQILegend = () => {
       </div>
     </div>
   );
-};
+}
 
-export const InteractiveAQIMap = () => {
+interface MapContentProps {
+  stations: AQIStation[];
+  selectedStation: StationDetails | null;
+  activeStationId: number | null;
+  isLoading: boolean;
+  onBoundsChange: (bounds: { north: number; south: number; east: number; west: number }) => void;
+  onMarkerClick: (station: AQIStation) => void;
+  onLoadDetails: (station: AQIStation) => void;
+}
+
+function MapContent({
+  stations,
+  selectedStation,
+  activeStationId,
+  isLoading,
+  onBoundsChange,
+  onMarkerClick,
+  onLoadDetails,
+}: MapContentProps) {
+  return (
+    <>
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+      <MapBoundsHandler onBoundsChange={onBoundsChange} />
+      {stations.map((station) => (
+        <Marker
+          key={station.uid}
+          position={[station.lat, station.lng]}
+          icon={createAQIIcon(station.aqi)}
+          eventHandlers={{
+            click: () => onMarkerClick(station),
+          }}
+        >
+          <Popup>
+            <StationPopupContent
+              station={station}
+              details={activeStationId === station.uid ? selectedStation : null}
+              onLoadDetails={() => onLoadDetails(station)}
+              isLoading={isLoading && activeStationId === station.uid}
+            />
+          </Popup>
+        </Marker>
+      ))}
+    </>
+  );
+}
+
+export function InteractiveAQIMap() {
   const { 
     stations, 
     selectedStation, 
@@ -256,7 +295,6 @@ export const InteractiveAQIMap = () => {
   const [activeStationId, setActiveStationId] = useState<number | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
-  // Default center: Almaty, Kazakhstan
   const defaultCenter: [number, number] = [43.238949, 76.945465];
   const defaultZoom = 11;
 
@@ -265,7 +303,7 @@ export const InteractiveAQIMap = () => {
     setLastUpdate(new Date());
   }, [fetchStationsInBounds]);
 
-  const handleMarkerClick = async (station: AQIStation) => {
+  const handleMarkerClick = (station: AQIStation) => {
     setActiveStationId(station.uid);
     clearSelectedStation();
   };
@@ -274,19 +312,8 @@ export const InteractiveAQIMap = () => {
     await fetchStationDetails(station.lat, station.lng);
   };
 
-  const handleRefresh = () => {
-    // Trigger a re-fetch by simulating bounds change
-    const mapContainer = document.querySelector('.leaflet-container');
-    if (mapContainer) {
-      const event = new Event('moveend');
-      mapContainer.dispatchEvent(event);
-    }
-    setLastUpdate(new Date());
-  };
-
   return (
     <div className="glass-card rounded-2xl overflow-hidden shadow-elevated animate-fade-in">
-      {/* Header */}
       <div className="p-4 border-b border-border/50 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <MapPin className="w-5 h-5 text-primary" />
@@ -299,18 +326,9 @@ export const InteractiveAQIMap = () => {
               Обновлено: {lastUpdate.toLocaleTimeString('ru-RU')}
             </span>
           )}
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={handleRefresh}
-            disabled={isLoading}
-          >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-          </Button>
         </div>
       </div>
 
-      {/* Error message */}
       {error && (
         <div className="p-3 bg-destructive/10 border-b border-destructive/20 flex items-center gap-2 text-destructive text-sm">
           <AlertTriangle className="w-4 h-4" />
@@ -318,7 +336,6 @@ export const InteractiveAQIMap = () => {
         </div>
       )}
 
-      {/* Map */}
       <div className="relative h-[400px]">
         <MapContainer
           center={defaultCenter}
@@ -326,46 +343,27 @@ export const InteractiveAQIMap = () => {
           className="h-full w-full z-0"
           style={{ background: 'hsl(var(--muted))' }}
         >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          <MapContent
+            stations={stations}
+            selectedStation={selectedStation}
+            activeStationId={activeStationId}
+            isLoading={isLoading}
+            onBoundsChange={handleBoundsChange}
+            onMarkerClick={handleMarkerClick}
+            onLoadDetails={handleLoadDetails}
           />
-          
-          <MapEvents onBoundsChange={handleBoundsChange} />
-
-          {stations.map((station) => (
-            <Marker
-              key={station.uid}
-              position={[station.lat, station.lng]}
-              icon={createAQIIcon(station.aqi)}
-              eventHandlers={{
-                click: () => handleMarkerClick(station),
-              }}
-            >
-              <Popup>
-                <StationPopup
-                  station={station}
-                  details={activeStationId === station.uid ? selectedStation : null}
-                  onLoadDetails={() => handleLoadDetails(station)}
-                  isLoading={isLoading && activeStationId === station.uid}
-                />
-              </Popup>
-            </Marker>
-          ))}
         </MapContainer>
 
         <AQILegend />
 
-        {/* Stations count */}
         <div className="absolute top-4 right-4 z-[1000] glass-card rounded-lg px-3 py-2">
           <span className="text-sm font-medium">{stations.length} станций</span>
         </div>
       </div>
 
-      {/* Footer info */}
       <div className="p-3 border-t border-border/50 text-xs text-muted-foreground text-center">
         Данные предоставлены <a href="https://aqicn.org" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">World Air Quality Index Project</a>
       </div>
     </div>
   );
-};
+}
