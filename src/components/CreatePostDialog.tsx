@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { TreePine, Bike, Recycle, AlertCircle, Send, Loader2, MessageSquare } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { TreePine, Bike, Recycle, AlertCircle, Send, Loader2, MessageSquare, Image, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -36,6 +36,69 @@ export function CreatePostDialog({ open, onOpenChange, onPostCreated }: CreatePo
   const [postType, setPostType] = useState<PostType>('general');
   const [impactDescription, setImpactDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Пожалуйста, выберите изображение');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Размер изображения не должен превышать 5 МБ');
+      return;
+    }
+
+    setImageFile(file);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user!.id}/${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('post-images')
+        .upload(fileName, file);
+
+      if (uploadError) {
+        // If bucket doesn't exist, just return null (image optional)
+        console.error('Upload error:', uploadError);
+        return null;
+      }
+
+      const { data } = supabase.storage
+        .from('post-images')
+        .getPublicUrl(fileName);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      return null;
+    }
+  };
 
   const handleSubmit = async () => {
     if (!user) {
@@ -81,12 +144,19 @@ export function CreatePostDialog({ open, onOpenChange, onPostCreated }: CreatePo
         return;
       }
 
+      // Upload image if present
+      let imageUrl: string | null = null;
+      if (imageFile) {
+        imageUrl = await uploadImage(imageFile);
+      }
+
       // Content approved, create the post
       const { error } = await supabase.from('community_posts').insert({
         user_id: user.id,
         content: content.trim(),
         post_type: postType,
         impact_description: impactDescription.trim() || null,
+        image_url: imageUrl,
       });
 
       if (error) throw error;
@@ -95,6 +165,8 @@ export function CreatePostDialog({ open, onOpenChange, onPostCreated }: CreatePo
       setContent('');
       setPostType('general');
       setImpactDescription('');
+      setImageFile(null);
+      setImagePreview(null);
       onOpenChange(false);
       onPostCreated();
     } catch (error: any) {
@@ -163,6 +235,50 @@ export function CreatePostDialog({ open, onOpenChange, onPostCreated }: CreatePo
             </p>
           </div>
 
+          {/* Image upload */}
+          <div>
+            <label className="text-sm font-medium mb-2 block">
+              Фото <span className="text-muted-foreground">(опционально)</span>
+            </label>
+            
+            {imagePreview ? (
+              <div className="relative inline-block">
+                <img 
+                  src={imagePreview} 
+                  alt="Preview" 
+                  className="max-h-40 rounded-lg object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className="absolute -top-2 -right-2 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageSelect}
+                  className="hidden"
+                  id="post-image-input"
+                />
+                <label
+                  htmlFor="post-image-input"
+                  className="flex items-center gap-2 px-4 py-3 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-all"
+                >
+                  <Image className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    Нажмите для загрузки фото (макс. 5 МБ)
+                  </span>
+                </label>
+              </div>
+            )}
+          </div>
+
           {/* Impact description (optional) */}
           {postType !== 'general' && (
             <div>
@@ -190,6 +306,13 @@ export function CreatePostDialog({ open, onOpenChange, onPostCreated }: CreatePo
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm">{content}</p>
+                  {imagePreview && (
+                    <img 
+                      src={imagePreview} 
+                      alt="Preview" 
+                      className="max-h-24 rounded-lg object-cover mt-2"
+                    />
+                  )}
                   {impactDescription && (
                     <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs font-medium mt-2">
                       ✨ {impactDescription}
