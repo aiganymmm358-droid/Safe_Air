@@ -13,6 +13,8 @@ interface CommunityPost {
   comments_count: number;
   is_verified: boolean;
   is_hidden: boolean;
+  is_pinned: boolean;
+  pinned_at: string | null;
   created_at: string;
   // Joined profile data
   user_name: string | null;
@@ -76,11 +78,20 @@ export function useCommunityPosts() {
           ...post,
           post_type: post.post_type as CommunityPost['post_type'],
           is_hidden: post.is_hidden ?? false,
+          is_pinned: post.is_pinned ?? false,
+          pinned_at: post.pinned_at,
           user_name: profile?.full_name || 'Аноним',
           user_avatar: profile?.avatar_url || null,
           user_level: progress?.level || 1,
           is_liked: userLikes.includes(post.id),
         };
+      });
+
+      // Sort: pinned posts first, then by created_at
+      enrichedPosts.sort((a, b) => {
+        if (a.is_pinned && !b.is_pinned) return -1;
+        if (!a.is_pinned && b.is_pinned) return 1;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
 
       setPosts(enrichedPosts);
@@ -133,10 +144,76 @@ export function useCommunityPosts() {
     }
   };
 
+  const deletePost = async (postId: string) => {
+    if (!user) return false;
+
+    const post = posts.find(p => p.id === postId);
+    if (!post || post.user_id !== user.id) return false;
+
+    // Optimistic update
+    setPosts(prev => prev.filter(p => p.id !== postId));
+
+    try {
+      const { error } = await supabase
+        .from('community_posts')
+        .delete()
+        .eq('id', postId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      // Revert - refetch posts
+      fetchPosts();
+      return false;
+    }
+  };
+
+  const pinPost = async (postId: string, shouldPin: boolean) => {
+    if (!user) return false;
+
+    try {
+      // First verify content is safe via moderation
+      if (shouldPin) {
+        const post = posts.find(p => p.id === postId);
+        if (!post) return false;
+
+        const { data: moderationResult, error: modError } = await supabase.functions.invoke('moderate-content', {
+          body: { content: post.content, postType: post.post_type }
+        });
+
+        if (modError || !moderationResult?.isAppropriate) {
+          console.error('Content not appropriate for pinning');
+          return false;
+        }
+      }
+
+      const { error } = await supabase
+        .from('community_posts')
+        .update({ 
+          is_pinned: shouldPin,
+          pinned_at: shouldPin ? new Date().toISOString() : null,
+          pinned_by: shouldPin ? user.id : null
+        })
+        .eq('id', postId);
+
+      if (error) throw error;
+      
+      await fetchPosts();
+      return true;
+    } catch (error) {
+      console.error('Error pinning post:', error);
+      return false;
+    }
+  };
+
   return {
     posts,
     isLoading,
     refreshPosts: fetchPosts,
     likePost,
+    deletePost,
+    pinPost,
   };
 }

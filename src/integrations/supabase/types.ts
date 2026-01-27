@@ -82,10 +82,13 @@ export type Database = {
           image_url: string | null
           impact_description: string | null
           is_hidden: boolean
+          is_pinned: boolean
           is_verified: boolean
           likes_count: number
           moderation_reason: string | null
           moderation_status: string
+          pinned_at: string | null
+          pinned_by: string | null
           post_type: string
           updated_at: string
           user_id: string
@@ -98,10 +101,13 @@ export type Database = {
           image_url?: string | null
           impact_description?: string | null
           is_hidden?: boolean
+          is_pinned?: boolean
           is_verified?: boolean
           likes_count?: number
           moderation_reason?: string | null
           moderation_status?: string
+          pinned_at?: string | null
+          pinned_by?: string | null
           post_type?: string
           updated_at?: string
           user_id: string
@@ -114,10 +120,13 @@ export type Database = {
           image_url?: string | null
           impact_description?: string | null
           is_hidden?: boolean
+          is_pinned?: boolean
           is_verified?: boolean
           likes_count?: number
           moderation_reason?: string | null
           moderation_status?: string
+          pinned_at?: string | null
+          pinned_by?: string | null
           post_type?: string
           updated_at?: string
           user_id?: string

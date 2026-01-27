@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { Heart, MessageCircle, Share2, CheckCircle, TreePine, Bike, Recycle, AlertCircle, MessageSquare, Loader2, Pencil, Flag, MoreHorizontal } from "lucide-react";
+import { Heart, MessageCircle, Share2, CheckCircle, TreePine, Bike, Recycle, AlertCircle, MessageSquare, Loader2, Pencil, Flag, MoreHorizontal, Trash2, Pin, PinOff } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useCommunityPosts } from "@/hooks/useCommunityPosts";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
 import { EditPostDialog } from "./EditPostDialog";
 import { ReportPostDialog } from "./ReportPostDialog";
+import { DeletePostDialog } from "./DeletePostDialog";
+import { toast } from "@/hooks/use-toast";
 
 interface SocialFeedProps {
   onRefreshNeeded?: () => void;
@@ -35,9 +37,11 @@ const getActionColor = (type: string) => {
 
 export const SocialFeed = ({ onRefreshNeeded }: SocialFeedProps) => {
   const { user } = useAuthContext();
-  const { posts, isLoading, likePost, refreshPosts } = useCommunityPosts();
+  const { posts, isLoading, likePost, refreshPosts, deletePost, pinPost } = useCommunityPosts();
   const [editingPost, setEditingPost] = useState<{ id: string; content: string; impact_description: string | null } | null>(null);
   const [reportingPostId, setReportingPostId] = useState<string | null>(null);
+  const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
+  const [pinningPostId, setPinningPostId] = useState<string | null>(null);
 
   const handleLike = (postId: string) => {
     if (!user) return;
@@ -46,6 +50,35 @@ export const SocialFeed = ({ onRefreshNeeded }: SocialFeedProps) => {
 
   const handlePostUpdated = () => {
     refreshPosts();
+  };
+
+  const handleDeletePost = async () => {
+    if (!deletingPostId) return false;
+    const success = await deletePost(deletingPostId);
+    if (success) {
+      toast({ title: "Пост удален", description: "Ваш пост был успешно удален" });
+    } else {
+      toast({ title: "Ошибка", description: "Не удалось удалить пост", variant: "destructive" });
+    }
+    return success;
+  };
+
+  const handlePinPost = async (postId: string, shouldPin: boolean) => {
+    setPinningPostId(postId);
+    const success = await pinPost(postId, shouldPin);
+    setPinningPostId(null);
+    if (success) {
+      toast({ 
+        title: shouldPin ? "Пост закреплен" : "Пост откреплен", 
+        description: shouldPin ? "Пост будет отображаться в начале ленты" : "Пост больше не закреплен" 
+      });
+    } else {
+      toast({ 
+        title: "Ошибка", 
+        description: shouldPin ? "Не удалось закрепить пост. Возможно, контент не соответствует требованиям." : "Не удалось открепить пост", 
+        variant: "destructive" 
+      });
+    }
   };
 
   if (isLoading) {
@@ -89,8 +122,19 @@ export const SocialFeed = ({ onRefreshNeeded }: SocialFeedProps) => {
             return (
               <div
                 key={post.id}
-                className="p-4 bg-muted/30 rounded-xl hover:bg-muted/50 transition-all"
+                className={`p-4 rounded-xl hover:bg-muted/50 transition-all ${
+                  post.is_pinned 
+                    ? 'bg-primary/5 border-2 border-primary/20' 
+                    : 'bg-muted/30'
+                }`}
               >
+                {/* Pinned badge */}
+                {post.is_pinned && (
+                  <div className="flex items-center gap-1.5 text-primary text-xs font-medium mb-2">
+                    <Pin className="w-3 h-3" />
+                    <span>Закреплено</span>
+                  </div>
+                )}
                 {/* Header */}
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
@@ -124,23 +168,51 @@ export const SocialFeed = ({ onRefreshNeeded }: SocialFeedProps) => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           {isOwner && (
-                            <DropdownMenuItem onClick={() => setEditingPost({
-                              id: post.id,
-                              content: post.content,
-                              impact_description: post.impact_description
-                            })}>
-                              <Pencil className="w-4 h-4 mr-2" />
-                              Редактировать
-                            </DropdownMenuItem>
+                            <>
+                              <DropdownMenuItem onClick={() => setEditingPost({
+                                id: post.id,
+                                content: post.content,
+                                impact_description: post.impact_description
+                              })}>
+                                <Pencil className="w-4 h-4 mr-2" />
+                                Редактировать
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => setDeletingPostId(post.id)}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Удалить
+                              </DropdownMenuItem>
+                            </>
                           )}
                           {!isOwner && (
-                            <DropdownMenuItem 
-                              onClick={() => setReportingPostId(post.id)}
-                              className="text-destructive focus:text-destructive"
-                            >
-                              <Flag className="w-4 h-4 mr-2" />
-                              Пожаловаться
-                            </DropdownMenuItem>
+                            <>
+                              <DropdownMenuItem 
+                                onClick={() => setReportingPostId(post.id)}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <Flag className="w-4 h-4 mr-2" />
+                                Пожаловаться
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem 
+                                onClick={() => handlePinPost(post.id, !post.is_pinned)}
+                                disabled={pinningPostId === post.id}
+                              >
+                                {post.is_pinned ? (
+                                  <>
+                                    <PinOff className="w-4 h-4 mr-2" />
+                                    Открепить
+                                  </>
+                                ) : (
+                                  <>
+                                    <Pin className="w-4 h-4 mr-2" />
+                                    Закрепить
+                                  </>
+                                )}
+                              </DropdownMenuItem>
+                            </>
                           )}
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -202,6 +274,13 @@ export const SocialFeed = ({ onRefreshNeeded }: SocialFeedProps) => {
           onReported={handlePostUpdated}
         />
       )}
+
+      {/* Delete Post Dialog */}
+      <DeletePostDialog
+        open={!!deletingPostId}
+        onOpenChange={(open) => !open && setDeletingPostId(null)}
+        onConfirm={handleDeletePost}
+      />
     </div>
   );
 };
