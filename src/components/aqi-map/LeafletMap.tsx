@@ -1,33 +1,25 @@
-import { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import { AQIStation, StationDetails } from '@/hooks/useAirQualityData';
-import { StationPopupContent } from './InteractiveAQIMap';
-import 'leaflet/dist/leaflet.css';
+import { useEffect } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import L from "leaflet";
+import { AQIStation, StationDetails } from "@/hooks/useAirQualityData";
+import { StationPopupContent } from "@/components/aqi-map/StationPopupContent";
+import { getAQIColor } from "@/components/aqi-map/aqiUtils";
+import "leaflet/dist/leaflet.css";
 
 // Fix for default markers in Leaflet with webpack/vite
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
 });
-
-const getAQIColor = (aqi: number): string => {
-  if (aqi <= 50) return '#22c55e';
-  if (aqi <= 100) return '#eab308';
-  if (aqi <= 150) return '#f97316';
-  if (aqi <= 200) return '#ef4444';
-  if (aqi <= 300) return '#a855f7';
-  return '#7f1d1d';
-};
 
 const createAQIIcon = (aqi: number) => {
   const color = getAQIColor(aqi);
   const size = aqi > 150 ? 40 : 32;
-  
+
   return L.divIcon({
-    className: 'custom-aqi-marker',
+    className: "custom-aqi-marker",
     html: `
       <div style="
         background-color: ${color};
@@ -39,7 +31,7 @@ const createAQIIcon = (aqi: number) => {
         align-items: center;
         justify-content: center;
         font-weight: bold;
-        font-size: ${aqi > 150 ? '12px' : '11px'};
+        font-size: ${aqi > 150 ? "12px" : "11px"};
         box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         border: 2px solid white;
       ">
@@ -69,15 +61,14 @@ function MapBoundsHandler({ onBoundsChange }: MapBoundsHandlerProps) {
       });
     };
 
-    // Initial fetch
     handleMoveEnd();
 
-    map.on('moveend', handleMoveEnd);
-    map.on('zoomend', handleMoveEnd);
+    map.on("moveend", handleMoveEnd);
+    map.on("zoomend", handleMoveEnd);
 
     return () => {
-      map.off('moveend', handleMoveEnd);
-      map.off('zoomend', handleMoveEnd);
+      map.off("moveend", handleMoveEnd);
+      map.off("zoomend", handleMoveEnd);
     };
   }, [map, onBoundsChange]);
 
@@ -86,12 +77,12 @@ function MapBoundsHandler({ onBoundsChange }: MapBoundsHandlerProps) {
 
 function AQILegend() {
   const levels = [
-    { range: '0-50', label: 'Отлично', color: '#22c55e' },
-    { range: '51-100', label: 'Умеренно', color: '#eab308' },
-    { range: '101-150', label: 'Для чувствительных', color: '#f97316' },
-    { range: '151-200', label: 'Нездорово', color: '#ef4444' },
-    { range: '201-300', label: 'Очень нездорово', color: '#a855f7' },
-    { range: '300+', label: 'Опасно', color: '#7f1d1d' },
+    { range: "0-50", label: "Отлично", color: "#22c55e" },
+    { range: "51-100", label: "Умеренно", color: "#eab308" },
+    { range: "101-150", label: "Для чувствительных", color: "#f97316" },
+    { range: "151-200", label: "Нездорово", color: "#ef4444" },
+    { range: "201-300", label: "Очень нездорово", color: "#a855f7" },
+    { range: "300+", label: "Опасно", color: "#7f1d1d" },
   ];
 
   return (
@@ -100,10 +91,7 @@ function AQILegend() {
       <div className="space-y-1">
         {levels.map((level) => (
           <div key={level.range} className="flex items-center gap-2 text-xs">
-            <div 
-              className="w-4 h-4 rounded-full"
-              style={{ backgroundColor: level.color }}
-            />
+            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: level.color }} />
             <span className="text-muted-foreground">{level.range}</span>
             <span>{level.label}</span>
           </div>
@@ -137,12 +125,7 @@ export default function LeafletMap({
 
   return (
     <>
-      <MapContainer
-        center={defaultCenter}
-        zoom={defaultZoom}
-        className="h-full w-full z-0"
-        style={{ background: 'hsl(var(--muted))' }}
-      >
+      <MapContainer center={defaultCenter} zoom={defaultZoom} className="h-full w-full z-0" style={{ background: "hsl(var(--muted))" }}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -153,9 +136,7 @@ export default function LeafletMap({
             key={station.uid}
             position={[station.lat, station.lng]}
             icon={createAQIIcon(station.aqi)}
-            eventHandlers={{
-              click: () => onMarkerClick(station),
-            }}
+            eventHandlers={{ click: () => onMarkerClick(station) }}
           >
             <Popup>
               <StationPopupContent
