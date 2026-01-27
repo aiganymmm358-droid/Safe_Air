@@ -219,8 +219,8 @@ export function useUserProgress() {
     }
   };
 
-  // Complete a daily task
-  const completeTask = async (taskId: string) => {
+  // Complete a daily task with optional verification note
+  const completeTask = async (taskId: string, verificationNote?: string) => {
     if (!user) return { success: false, error: 'Not authenticated' };
 
     const task = state.dailyTasks.find(t => t.task_id === taskId);
@@ -228,8 +228,14 @@ export function useUserProgress() {
       return { success: false, error: 'Task not found or already completed' };
     }
 
+    // Check if this is a manual task that requires verification
+    const taskInfo = AVAILABLE_TASKS.find(t => t.task_id === taskId);
+    if (taskInfo?.verification_type === 'manual' && (!verificationNote || verificationNote.length < 3)) {
+      return { success: false, error: 'Требуется подтверждение выполнения' };
+    }
+
     try {
-      // Mark task as completed
+      // Mark task as completed with optional note
       const { error: updateError } = await supabase
         .from('user_daily_tasks')
         .update({
@@ -240,12 +246,16 @@ export function useUserProgress() {
 
       if (updateError) throw updateError;
 
-      // Award XP and coins
+      // Award XP and coins with verification note in description
+      const description = verificationNote 
+        ? `Выполнено задание: ${task.task_name} (${verificationNote})`
+        : `Выполнено задание: ${task.task_name}`;
+        
       const result = await addXP(
         task.xp_reward,
         task.coin_reward,
         'daily_task',
-        `Выполнено задание: ${task.task_name}`
+        description
       );
 
       // Check for achievements
