@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, Check, X, Target, Sparkles, Clock } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, Check, X, Target, Sparkles, Clock, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -16,6 +16,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
+import { TaskCompletionDialog } from './TaskCompletionDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -35,7 +36,7 @@ interface DailyTask {
 interface DailyTasksManagerProps {
   dailyTasks: DailyTask[];
   onTaskAdded: () => void;
-  onTaskCompleted: (taskId: string) => Promise<{ success: boolean; leveledUp?: boolean; newLevel?: number; error?: string }>;
+  onTaskCompleted: (taskId: string, note?: string) => Promise<{ success: boolean; leveledUp?: boolean; newLevel?: number; error?: string }>;
   onTaskRemoved: () => void;
 }
 
@@ -45,6 +46,8 @@ export function DailyTasksManager({ dailyTasks, onTaskAdded, onTaskCompleted, on
   const [selectedCategory, setSelectedCategory] = useState<string>('daily');
   const [addingTaskId, setAddingTaskId] = useState<string | null>(null);
   const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [taskToComplete, setTaskToComplete] = useState<{ id: string; name: string } | null>(null);
 
   const addedTaskIds = dailyTasks.map(t => t.task_id);
 
@@ -98,19 +101,36 @@ export function DailyTasksManager({ dailyTasks, onTaskAdded, onTaskCompleted, on
     }
   };
 
-  const handleCompleteTask = async (taskId: string) => {
+  const initiateCompleteTask = (taskId: string, taskName: string) => {
+    const taskInfo = AVAILABLE_TASKS.find(t => t.task_id === taskId);
+    
+    // For auto-verifiable tasks, complete directly
+    if (taskInfo?.verification_type !== 'manual') {
+      handleCompleteTask(taskId);
+      return;
+    }
+    
+    // For manual tasks, show confirmation dialog
+    setTaskToComplete({ id: taskId, name: taskName });
+    setConfirmDialogOpen(true);
+  };
+
+  const handleCompleteTask = async (taskId: string, note?: string) => {
     setCompletingTaskId(taskId);
     try {
-      const result = await onTaskCompleted(taskId);
+      const result = await onTaskCompleted(taskId, note);
       if (result.success) {
         if (result.leveledUp) {
           toast.success(`🎉 Поздравляем! Вы достигли ${result.newLevel} уровня!`);
+        } else {
+          toast.success('Задание выполнено! +XP и монеты получены');
         }
       } else {
         toast.error(result.error || 'Не удалось выполнить задание');
       }
     } finally {
       setCompletingTaskId(null);
+      setTaskToComplete(null);
     }
   };
 
@@ -280,7 +300,7 @@ export function DailyTasksManager({ dailyTasks, onTaskAdded, onTaskCompleted, on
                     <>
                       <Button
                         size="sm"
-                        onClick={() => handleCompleteTask(task.task_id)}
+                        onClick={() => initiateCompleteTask(task.task_id, task.task_name)}
                         disabled={completingTaskId === task.task_id}
                       >
                         {completingTaskId === task.task_id ? (
@@ -321,6 +341,17 @@ export function DailyTasksManager({ dailyTasks, onTaskAdded, onTaskCompleted, on
             </div>
           </div>
         </div>
+      )}
+
+      {/* Task completion confirmation dialog */}
+      {taskToComplete && (
+        <TaskCompletionDialog
+          open={confirmDialogOpen}
+          onOpenChange={setConfirmDialogOpen}
+          taskId={taskToComplete.id}
+          taskName={taskToComplete.name}
+          onConfirm={(note) => handleCompleteTask(taskToComplete.id, note)}
+        />
       )}
     </div>
   );
