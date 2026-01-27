@@ -257,9 +257,15 @@
 }
 
 /* Leaflet custom styles */
-.custom-aqi-marker {
+.custom-aqi-marker,
+.custom-pollution-marker {
   background: transparent !important;
   border: none !important;
+}
+
+.custom-aqi-marker > div:hover,
+.custom-pollution-marker > div:hover {
+  transform: scale(1.15);
 }
 
 .user-location-marker {
@@ -279,4 +285,9 @@
 
 .leaflet-container {
   font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Better map tiles contrast */
+.leaflet-tile-pane {
+  filter: saturate(0.9) brightness(1.02);
 }
