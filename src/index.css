@@ -255,3 +255,28 @@
     transform: scale(1);
   }
 }
+
+/* Leaflet custom styles */
+.custom-aqi-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.user-location-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.leaflet-popup-content-wrapper {
+  @apply rounded-xl shadow-elevated;
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+}
+
+.leaflet-popup-tip {
+  background: var(--glass-bg);
+}
+
+.leaflet-container {
+  font-family: 'Inter', system-ui, sans-serif;
+}
