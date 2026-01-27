@@ -58,29 +58,41 @@ Deno.serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Ты эксперт по анализу изображений для экологического приложения SafeAir Pro.
-Твоя задача - проверить фото на два критерия:
+            content: `Ты строгий модератор изображений для экологического приложения SafeAir Pro.
+Твоя задача - СТРОГО проверить фото на два критерия:
 
-1. РЕЛЕВАНТНОСТЬ: Фото должно содержать элементы окружающей среды, природы или городской экологии:
-   - Небо, облака, горизонт
-   - Растительность (деревья, трава, парки)
-   - Улицы, здания, городской пейзаж
+1. РЕЛЕВАНТНОСТЬ (ОЧЕНЬ ВАЖНО - будь строгим!):
+   Фото ОБЯЗАТЕЛЬНО должно содержать элементы окружающей среды для анализа качества воздуха:
+   ✅ ПОДХОДЯТ ТОЛЬКО:
+   - Небо, облака, атмосфера, горизонт
+   - Уличные сцены с видом на небо
+   - Городской пейзаж с улицами и зданиями на фоне неба
    - Промышленные объекты, трубы, дым
-   - Транспорт, дороги
-   - Водоёмы, реки
+   - Природные ландшафты (горы, леса, поля)
+   - Транспорт на улице, дороги
 
-   НЕ ПОДХОДЯТ: селфи, еда, документы, скриншоты, интерьеры помещений, абстрактные изображения
+   ❌ НЕ ПОДХОДЯТ (ОТКЛОНЯЙ!):
+   - Портреты людей, селфи, лица
+   - Еда, напитки
+   - Документы, текст, скриншоты
+   - Интерьеры помещений (комнаты, офисы)
+   - Домашние животные крупным планом
+   - Абстрактные изображения
+   - Продукты, товары
+   - Любые фото БЕЗ видимого неба или улицы
 
-2. КАЧЕСТВО: Фото должно быть достаточного качества для анализа:
+2. КАЧЕСТВО:
    - Не слишком размытое
    - Не слишком тёмное или засвеченное
    - Можно различить основные элементы
 
-Ответь ТОЛЬКО в JSON формате:
+ВАЖНО: Если на фото человек крупным планом (селфи, портрет) - это НЕ подходит, даже если на заднем плане есть небо!
+
+Ответь СТРОГО в JSON формате:
 {
   "isRelevant": true/false,
   "isQualityOk": true/false,
-  "reason": "краткое объяснение на русском, если фото не подходит, иначе null"
+  "reason": "краткое объяснение на русском почему фото не подходит, или null если подходит"
 }`
           },
           {
@@ -115,9 +127,14 @@ Deno.serve(async (req) => {
         );
       }
       
-      // Fallback: accept image if AI fails
+      // Fallback: reject image if AI fails (safer approach)
       return new Response(
-        JSON.stringify({ isValid: true, isRelevant: true, isQualityOk: true }),
+        JSON.stringify({ 
+          isValid: false, 
+          isRelevant: false, 
+          isQualityOk: true,
+          reason: 'Не удалось проверить изображение. Попробуйте ещё раз.'
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -133,9 +150,9 @@ Deno.serve(async (req) => {
       try {
         const parsed = JSON.parse(jsonMatch[0]);
         const result: AnalysisResult = {
-          isValid: (parsed.isRelevant ?? true) && (parsed.isQualityOk ?? true),
-          isRelevant: parsed.isRelevant ?? true,
-          isQualityOk: parsed.isQualityOk ?? true,
+          isValid: (parsed.isRelevant === true) && (parsed.isQualityOk === true),
+          isRelevant: parsed.isRelevant === true,
+          isQualityOk: parsed.isQualityOk === true,
           reason: parsed.reason || undefined
         };
         
@@ -148,16 +165,24 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Fallback if parsing fails
+    // Fallback if parsing fails - reject to be safe
     return new Response(
-      JSON.stringify({ isValid: true, isRelevant: true, isQualityOk: true }),
+      JSON.stringify({ 
+        isValid: false, 
+        isRelevant: false, 
+        isQualityOk: true,
+        reason: 'Не удалось распознать изображение. Попробуйте другое фото.'
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
     console.error('Analysis error:', error);
     return new Response(
-      JSON.stringify({ error: 'Ошибка анализа изображения' }),
+      JSON.stringify({ 
+        isValid: false,
+        reason: 'Ошибка анализа изображения. Попробуйте ещё раз.'
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

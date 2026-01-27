@@ -54,7 +54,10 @@ export function ARScannerDialog({ open, onOpenChange }: ARScannerDialogProps) {
 
       if (error) {
         console.error('Validation error:', error);
-        return { isValid: true }; // Fallback: accept if validation fails
+        return { 
+          isValid: false, 
+          reason: 'Не удалось проверить изображение. Попробуйте ещё раз.' 
+        };
       }
 
       return {
@@ -63,7 +66,10 @@ export function ARScannerDialog({ open, onOpenChange }: ARScannerDialogProps) {
       };
     } catch (err) {
       console.error('Validation request failed:', err);
-      return { isValid: true }; // Fallback: accept if request fails
+      return { 
+        isValid: false, 
+        reason: 'Ошибка соединения. Проверьте интернет и попробуйте снова.' 
+      };
     }
   };
 
