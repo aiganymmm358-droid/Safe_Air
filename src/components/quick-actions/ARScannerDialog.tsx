@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Camera, Wind, Thermometer, Droplets, Eye, Loader2, RefreshCw, AlertTriangle } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Camera, Wind, Thermometer, Droplets, Loader2, RefreshCw, AlertTriangle, Upload, X, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -38,6 +38,35 @@ export function ARScannerDialog({ open, onOpenChange }: ARScannerDialogProps) {
   const [scanProgress, setScanProgress] = useState(0);
   const [analysis, setAnalysis] = useState<AirAnalysis | null>(null);
   const [hasScanned, setHasScanned] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Пожалуйста, выберите изображение');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Размер изображения не должен превышать 10 МБ');
+      return;
+    }
+
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = (e) => setImagePreview(e.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const getAqiData = (aqi: number): Partial<AirAnalysis> => {
     if (aqi <= 50) return {
@@ -158,6 +187,9 @@ export function ARScannerDialog({ open, onOpenChange }: ARScannerDialogProps) {
   const resetScan = () => {
     setAnalysis(null);
     setScanProgress(0);
+    setImagePreview(null);
+    setImageFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
@@ -177,17 +209,51 @@ export function ARScannerDialog({ open, onOpenChange }: ARScannerDialogProps) {
           {!analysis ? (
             // Scanning interface
             <div className="space-y-4">
+              {/* Image upload area */}
               <div className="aspect-video bg-gradient-to-br from-accent/20 to-primary/20 rounded-xl flex items-center justify-center relative overflow-hidden">
                 {isScanning ? (
                   <div className="text-center">
                     <div className="w-24 h-24 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-sm text-muted-foreground">Сканирование воздуха...</p>
+                    <p className="text-sm text-muted-foreground">Анализ изображения...</p>
                     <p className="text-2xl font-bold mt-2">{scanProgress}%</p>
+                  </div>
+                ) : imagePreview ? (
+                  <div className="relative w-full h-full">
+                    <img 
+                      src={imagePreview} 
+                      alt="Preview" 
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      className="absolute top-2 right-2 p-1.5 bg-destructive text-destructive-foreground rounded-full shadow-lg hover:bg-destructive/90 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                    {/* Scanning overlay effect */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-accent/10 to-transparent pointer-events-none" />
                   </div>
                 ) : (
                   <div className="text-center">
-                    <Camera className="w-16 h-16 text-accent/50 mx-auto mb-4" />
-                    <p className="text-muted-foreground">Нажмите для сканирования</p>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageSelect}
+                      className="hidden"
+                      id="ar-scanner-image-input"
+                    />
+                    <label
+                      htmlFor="ar-scanner-image-input"
+                      className="cursor-pointer flex flex-col items-center"
+                    >
+                      <div className="w-20 h-20 rounded-full bg-accent/20 flex items-center justify-center mb-4 hover:bg-accent/30 transition-colors">
+                        <ImageIcon className="w-10 h-10 text-accent" />
+                      </div>
+                      <p className="text-muted-foreground font-medium">Загрузите фото для анализа</p>
+                      <p className="text-xs text-muted-foreground mt-1">или нажмите кнопку ниже</p>
+                    </label>
                   </div>
                 )}
                 
@@ -202,28 +268,42 @@ export function ARScannerDialog({ open, onOpenChange }: ARScannerDialogProps) {
 
               {isScanning && <Progress value={scanProgress} className="h-2" />}
 
-              <Button 
-                onClick={startScan} 
-                disabled={isScanning || locationLoading}
-                className="w-full"
-              >
-                {locationLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Определение местоположения...
-                  </>
-                ) : isScanning ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Анализ...
-                  </>
-                ) : (
-                  <>
-                    <Camera className="w-4 h-4 mr-2" />
-                    Начать сканирование
-                  </>
+              <div className="flex gap-2">
+                {!imagePreview && (
+                  <Button 
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isScanning || locationLoading}
+                    className="flex-1"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Выбрать фото
+                  </Button>
                 )}
-              </Button>
+                
+                <Button 
+                  onClick={startScan} 
+                  disabled={isScanning || locationLoading}
+                  className="flex-1"
+                >
+                  {locationLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Определение...
+                    </>
+                  ) : isScanning ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Анализ...
+                    </>
+                  ) : (
+                    <>
+                      <Camera className="w-4 h-4 mr-2" />
+                      {imagePreview ? 'Анализировать фото' : 'Сканировать'}
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           ) : (
             // Results interface
