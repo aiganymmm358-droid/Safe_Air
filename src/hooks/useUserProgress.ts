@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { AVAILABLE_TASKS } from '@/data/availableTasks';
 
 export interface UserProgress {
   id: string;
@@ -60,30 +61,16 @@ interface ProgressState {
   error: string | null;
 }
 
-// Default daily tasks that get created for users
-const DEFAULT_DAILY_TASKS = [
-  {
-    task_id: 'check_aqi',
-    task_name: 'Проверить качество воздуха',
-    task_description: 'Откройте карту и проверьте текущий AQI',
-    xp_reward: 10,
-    coin_reward: 5,
-  },
-  {
-    task_id: 'view_recommendations',
-    task_name: 'Прочитать рекомендации',
-    task_description: 'Просмотрите рекомендации для здоровья',
-    xp_reward: 15,
-    coin_reward: 8,
-  },
-  {
-    task_id: 'share_data',
-    task_name: 'Поделиться данными',
-    task_description: 'Расскажите друзьям о качестве воздуха',
-    xp_reward: 25,
-    coin_reward: 15,
-  },
-];
+// Default starter tasks for new users (only 3 basic ones)
+const DEFAULT_STARTER_TASKS = AVAILABLE_TASKS.filter(t => 
+  ['check_aqi', 'view_recommendations', 'share_data'].includes(t.task_id)
+).map(t => ({
+  task_id: t.task_id,
+  task_name: t.task_name,
+  task_description: t.task_description,
+  xp_reward: t.xp_reward,
+  coin_reward: t.coin_reward,
+}));
 
 export function useUserProgress() {
   const { user, isAuthenticated } = useAuthContext();
@@ -137,23 +124,32 @@ export function useUserProgress() {
       if (tasksRes.error) throw tasksRes.error;
       if (actionsRes.error) throw actionsRes.error;
 
-      // Initialize daily tasks if they don't exist for today
+      // Initialize default daily tasks only for new users (first time)
       let dailyTasks = tasksRes.data as UserDailyTask[];
       if (dailyTasks.length === 0 && progressRes.data) {
-        const today = new Date().toISOString().split('T')[0];
-        const newTasks = DEFAULT_DAILY_TASKS.map(task => ({
-          ...task,
-          user_id: user.id,
-          task_date: today,
-        }));
-
-        const { data: insertedTasks, error: insertError } = await supabase
+        // Check if user has ever had tasks
+        const { count } = await supabase
           .from('user_daily_tasks')
-          .insert(newTasks)
-          .select();
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
 
-        if (!insertError && insertedTasks) {
-          dailyTasks = insertedTasks as UserDailyTask[];
+        // Only add default tasks for completely new users
+        if (count === 0) {
+          const today = new Date().toISOString().split('T')[0];
+          const newTasks = DEFAULT_STARTER_TASKS.map(task => ({
+            ...task,
+            user_id: user.id,
+            task_date: today,
+          }));
+
+          const { data: insertedTasks, error: insertError } = await supabase
+            .from('user_daily_tasks')
+            .insert(newTasks)
+            .select();
+
+          if (!insertError && insertedTasks) {
+            dailyTasks = insertedTasks as UserDailyTask[];
+          }
         }
       }
 
@@ -252,10 +248,49 @@ export function useUserProgress() {
         `Выполнено задание: ${task.task_name}`
       );
 
+      // Check for achievements
+      await checkAchievements();
+
       return result;
     } catch (error) {
       console.error('Error completing task:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Failed to complete task' };
+    }
+  };
+
+  // Check and award achievements
+  const checkAchievements = async () => {
+    if (!user || !state.progress) return;
+
+    const achievementIds = state.achievements.map(a => a.achievement_id);
+
+    // First task completed
+    const completedTasks = state.dailyTasks.filter(t => t.is_completed).length + 1;
+    if (completedTasks >= 1 && !achievementIds.includes('first_task')) {
+      await unlockAchievement('first_task', 'Первый шаг', 'Выполните первое задание', '🎯');
+    }
+
+    // 5 tasks completed
+    if (completedTasks >= 5 && !achievementIds.includes('five_tasks')) {
+      await unlockAchievement('five_tasks', 'Активист', 'Выполните 5 заданий', '⭐');
+    }
+
+    // Level up achievements
+    if (state.progress.level >= 5 && !achievementIds.includes('level_5')) {
+      await unlockAchievement('level_5', 'Опытный эколог', 'Достигните 5 уровня', '🌟');
+    }
+
+    if (state.progress.level >= 10 && !achievementIds.includes('level_10')) {
+      await unlockAchievement('level_10', 'Эко-мастер', 'Достигните 10 уровня', '👑');
+    }
+
+    // Streak achievements
+    if (state.progress.streak_days >= 3 && !achievementIds.includes('streak_3')) {
+      await unlockAchievement('streak_3', 'Постоянство', '3 дня активности подряд', '🔥');
+    }
+
+    if (state.progress.streak_days >= 7 && !achievementIds.includes('streak_7')) {
+      await unlockAchievement('streak_7', 'Недельный марафон', '7 дней активности подряд', '💪');
     }
   };
 
@@ -311,6 +346,31 @@ export function useUserProgress() {
     }
   };
 
+  // Remove a task from today's list
+  const removeTask = async (taskId: string) => {
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const task = state.dailyTasks.find(t => t.task_id === taskId);
+    if (!task) {
+      return { success: false, error: 'Task not found' };
+    }
+
+    try {
+      const { error } = await supabase
+        .from('user_daily_tasks')
+        .delete()
+        .eq('id', task.id);
+
+      if (error) throw error;
+
+      await fetchProgress();
+      return { success: true };
+    } catch (error) {
+      console.error('Error removing task:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to remove task' };
+    }
+  };
+
   // Calculate progress percentage to next level
   const getProgressPercentage = () => {
     if (!state.progress) return 0;
@@ -326,6 +386,7 @@ export function useUserProgress() {
     ...state,
     addXP,
     completeTask,
+    removeTask,
     updateStreak,
     unlockAchievement,
     refreshProgress: fetchProgress,
