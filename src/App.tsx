@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { GeolocationProvider } from "@/contexts/GeolocationContext";
+import { TaskVerificationProvider } from "@/contexts/TaskVerificationContext";
 import { Layout } from "@/components/Layout";
 import MapPage from "./pages/MapPage";
 import ProgressPage from "./pages/ProgressPage";
@@ -25,18 +26,20 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Routes>
-              <Route path="/auth" element={<AuthPage />} />
-              <Route element={<Layout />}>
-                <Route path="/" element={<MapPage />} />
-                <Route path="/progress" element={<ProgressPage />} />
-                <Route path="/health" element={<HealthPage />} />
-                <Route path="/community" element={<CommunityPage />} />
-                <Route path="/districts" element={<DistrictsPage />} />
-                <Route path="/actions" element={<ActionsPage />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <TaskVerificationProvider>
+              <Routes>
+                <Route path="/auth" element={<AuthPage />} />
+                <Route element={<Layout />}>
+                  <Route path="/" element={<MapPage />} />
+                  <Route path="/progress" element={<ProgressPage />} />
+                  <Route path="/health" element={<HealthPage />} />
+                  <Route path="/community" element={<CommunityPage />} />
+                  <Route path="/districts" element={<DistrictsPage />} />
+                  <Route path="/actions" element={<ActionsPage />} />
+                </Route>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </TaskVerificationProvider>
           </BrowserRouter>
         </TooltipProvider>
       </GeolocationProvider>
