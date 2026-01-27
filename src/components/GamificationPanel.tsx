@@ -1,4 +1,4 @@
-import { Trophy, Coins, Star } from "lucide-react";
+import { Trophy, Coins } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 interface GamificationPanelProps {
@@ -7,10 +7,10 @@ interface GamificationPanelProps {
   xpToNext: number;
   ecoCoins: number;
   streakDays: number;
-  badges: string[];
+  badges?: string[];
 }
 
-export const GamificationPanel = ({ level, xp, xpToNext, ecoCoins, streakDays, badges }: GamificationPanelProps) => {
+export const GamificationPanel = ({ level, xp, xpToNext, ecoCoins, streakDays }: GamificationPanelProps) => {
   const xpProgress = (xp / xpToNext) * 100;
 
   return (
@@ -26,7 +26,7 @@ export const GamificationPanel = ({ level, xp, xpToNext, ecoCoins, streakDays, b
       </div>
 
       {/* Level & XP */}
-      <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-xl p-4 mb-6">
+      <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-xl p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
@@ -43,28 +43,6 @@ export const GamificationPanel = ({ level, xp, xpToNext, ecoCoins, streakDays, b
           </div>
         </div>
         <Progress value={xpProgress} className="h-2" />
-      </div>
-
-      {/* Badges Preview */}
-      <div>
-        <h4 className="font-semibold mb-3 flex items-center gap-2">
-          <Star className="w-4 h-4 text-accent" />
-          Достижения
-        </h4>
-        <div className="flex gap-2 flex-wrap">
-          {badges.map((badge, index) => (
-            <div
-              key={index}
-              className="w-10 h-10 rounded-full bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center text-lg hover-lift cursor-pointer"
-              title={badge}
-            >
-              {badge}
-            </div>
-          ))}
-          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
-            +5
-          </div>
-        </div>
       </div>
     </div>
   );
