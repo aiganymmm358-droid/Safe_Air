@@ -1,7 +1,7 @@
 import { Header } from "@/components/Header";
 import { AQIDisplay } from "@/components/AQIDisplay";
 import { GamificationPanel } from "@/components/GamificationPanel";
-import { PollutionMap } from "@/components/PollutionMap";
+import { InteractiveAQIMap } from "@/components/InteractiveAQIMap";
 import { SocialFeed } from "@/components/SocialFeed";
 import { HealthRecommendations } from "@/components/HealthRecommendations";
 import { DistrictBattle } from "@/components/DistrictBattle";
@@ -54,7 +54,7 @@ const Index = () => {
             {/* Center Column - Map & Quick Actions */}
             <div className="lg:col-span-2 space-y-6">
               <QuickActions />
-              <PollutionMap />
+              <InteractiveAQIMap />
             </div>
           </div>
 
