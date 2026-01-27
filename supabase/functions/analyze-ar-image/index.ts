@@ -38,14 +38,39 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Prepare image for vision API
-    const imageData = imageBase64.includes('base64,') 
-      ? imageBase64.split('base64,')[1] 
-      : imageBase64;
+    // Prepare image for vision API - clean and validate base64
+    let imageData = imageBase64;
+    let mimeType = 'image/jpeg';
     
-    const mimeType = imageBase64.includes('data:') 
-      ? imageBase64.split(';')[0].split(':')[1] 
-      : 'image/jpeg';
+    // Extract mime type and clean base64 data
+    if (imageBase64.includes('data:')) {
+      const dataUrlMatch = imageBase64.match(/^data:([^;]+);base64,(.+)$/);
+      if (dataUrlMatch) {
+        mimeType = dataUrlMatch[1];
+        imageData = dataUrlMatch[2];
+      } else if (imageBase64.includes('base64,')) {
+        imageData = imageBase64.split('base64,')[1];
+        const typeMatch = imageBase64.match(/data:([^;]+)/);
+        if (typeMatch) mimeType = typeMatch[1];
+      }
+    }
+    
+    // Validate base64 - remove any whitespace/newlines
+    imageData = imageData.replace(/[\s\n\r]/g, '');
+    
+    // Check if base64 is valid
+    if (!imageData || imageData.length < 100) {
+      console.error('Invalid base64 data: too short');
+      return new Response(
+        JSON.stringify({ 
+          isValid: false, 
+          reason: 'Изображение повреждено или слишком маленькое. Загрузите другое фото.'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    console.log('Processing image, mimeType:', mimeType, 'dataLength:', imageData.length);
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
