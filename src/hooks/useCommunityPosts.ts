@@ -12,6 +12,7 @@ interface CommunityPost {
   likes_count: number;
   comments_count: number;
   is_verified: boolean;
+  is_hidden: boolean;
   created_at: string;
   // Joined profile data
   user_name: string | null;
@@ -31,6 +32,7 @@ export function useCommunityPosts() {
       const { data: postsData, error: postsError } = await supabase
         .from('community_posts')
         .select('*')
+        .eq('is_hidden', false)
         .order('created_at', { ascending: false })
         .limit(20);
 
@@ -73,6 +75,7 @@ export function useCommunityPosts() {
         return {
           ...post,
           post_type: post.post_type as CommunityPost['post_type'],
+          is_hidden: post.is_hidden ?? false,
           user_name: profile?.full_name || 'Аноним',
           user_avatar: profile?.avatar_url || null,
           user_level: progress?.level || 1,

@@ -55,6 +55,33 @@ export function CreatePostDialog({ open, onOpenChange, onPostCreated }: CreatePo
 
     setIsSubmitting(true);
     try {
+      // First, moderate the content with AI
+      const moderationResponse = await supabase.functions.invoke('moderate-content', {
+        body: { 
+          content: content.trim(),
+          action: 'check'
+        }
+      });
+
+      if (moderationResponse.error) {
+        throw new Error(moderationResponse.error.message);
+      }
+
+      const moderationResult = moderationResponse.data;
+
+      if (!moderationResult.approved) {
+        let message = moderationResult.reason || 'Контент не прошел модерацию';
+        if (moderationResult.actionTaken === 'warning') {
+          message += '\n\nВам вынесено предупреждение.';
+        } else if (moderationResult.actionTaken === 'ban') {
+          message += `\n\nВы заблокированы до ${new Date(moderationResult.banUntil).toLocaleDateString('ru-RU')}.`;
+        }
+        toast.error(message);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Content approved, create the post
       const { error } = await supabase.from('community_posts').insert({
         user_id: user.id,
         content: content.trim(),
@@ -70,9 +97,9 @@ export function CreatePostDialog({ open, onOpenChange, onPostCreated }: CreatePo
       setImpactDescription('');
       onOpenChange(false);
       onPostCreated();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating post:', error);
-      toast.error('Не удалось опубликовать пост');
+      toast.error(error.message || 'Не удалось опубликовать пост');
     } finally {
       setIsSubmitting(false);
     }

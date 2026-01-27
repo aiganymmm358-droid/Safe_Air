@@ -81,8 +81,11 @@ export type Database = {
           id: string
           image_url: string | null
           impact_description: string | null
+          is_hidden: boolean
           is_verified: boolean
           likes_count: number
+          moderation_reason: string | null
+          moderation_status: string
           post_type: string
           updated_at: string
           user_id: string
@@ -94,8 +97,11 @@ export type Database = {
           id?: string
           image_url?: string | null
           impact_description?: string | null
+          is_hidden?: boolean
           is_verified?: boolean
           likes_count?: number
+          moderation_reason?: string | null
+          moderation_status?: string
           post_type?: string
           updated_at?: string
           user_id: string
@@ -107,13 +113,57 @@ export type Database = {
           id?: string
           image_url?: string | null
           impact_description?: string | null
+          is_hidden?: boolean
           is_verified?: boolean
           likes_count?: number
+          moderation_reason?: string | null
+          moderation_status?: string
           post_type?: string
           updated_at?: string
           user_id?: string
         }
         Relationships: []
+      }
+      content_reports: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          reason: string
+          reporter_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          reason: string
+          reporter_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          reason?: string
+          reporter_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_reports_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       districts: {
         Row: {
@@ -416,6 +466,47 @@ export type Database = {
         }
         Relationships: []
       }
+      user_moderation: {
+        Row: {
+          action_type: string
+          ban_until: string | null
+          created_at: string
+          id: string
+          issued_by: string | null
+          reason: string
+          related_post_id: string | null
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          ban_until?: string | null
+          created_at?: string
+          id?: string
+          issued_by?: string | null
+          reason: string
+          related_post_id?: string | null
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          ban_until?: string | null
+          created_at?: string
+          id?: string
+          issued_by?: string | null
+          reason?: string
+          related_post_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_moderation_related_post_id_fkey"
+            columns: ["related_post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_progress: {
         Row: {
           created_at: string
@@ -536,6 +627,7 @@ export type Database = {
         }[]
       }
       get_current_user_id: { Args: never; Returns: string }
+      get_user_warning_count: { Args: { _user_id: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -546,6 +638,14 @@ export type Database = {
       invalidate_all_sessions: {
         Args: { _user_id: string }
         Returns: undefined
+      }
+      is_user_banned: { Args: { _user_id: string }; Returns: boolean }
+      moderate_user: {
+        Args: { _post_id?: string; _reason: string; _user_id: string }
+        Returns: {
+          action_taken: string
+          ban_until: string
+        }[]
       }
       update_user_streak: { Args: { _user_id: string }; Returns: number }
       upsert_user_environment: {
