@@ -14,6 +14,65 @@ export type Database = {
   }
   public: {
     Tables: {
+      challenge_activities: {
+        Row: {
+          activity_type: string
+          created_at: string
+          description: string | null
+          district_id: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          photo_url: string | null
+          points_awarded: number
+          rejection_reason: string | null
+          user_id: string
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          description?: string | null
+          district_id: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          photo_url?: string | null
+          points_awarded?: number
+          rejection_reason?: string | null
+          user_id: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          description?: string | null
+          district_id?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          photo_url?: string | null
+          points_awarded?: number
+          rejection_reason?: string | null
+          user_id?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_activities_district_id_fkey"
+            columns: ["district_id"]
+            isOneToOne: false
+            referencedRelation: "districts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_posts: {
         Row: {
           comments_count: number
@@ -53,6 +112,45 @@ export type Database = {
           post_type?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      districts: {
+        Row: {
+          city: string
+          created_at: string
+          current_rank: number
+          id: string
+          name: string
+          participants_count: number
+          reports_sent: number
+          total_score: number
+          trees_planted: number
+          updated_at: string
+        }
+        Insert: {
+          city?: string
+          created_at?: string
+          current_rank?: number
+          id?: string
+          name: string
+          participants_count?: number
+          reports_sent?: number
+          total_score?: number
+          trees_planted?: number
+          updated_at?: string
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          current_rank?: number
+          id?: string
+          name?: string
+          participants_count?: number
+          reports_sent?: number
+          total_score?: number
+          trees_planted?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -228,6 +326,38 @@ export type Database = {
           xp_reward?: number
         }
         Relationships: []
+      }
+      user_district_participation: {
+        Row: {
+          district_id: string
+          id: string
+          joined_at: string
+          total_contribution: number
+          user_id: string
+        }
+        Insert: {
+          district_id: string
+          id?: string
+          joined_at?: string
+          total_contribution?: number
+          user_id: string
+        }
+        Update: {
+          district_id?: string
+          id?: string
+          joined_at?: string
+          total_contribution?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_district_participation_district_id_fkey"
+            columns: ["district_id"]
+            isOneToOne: false
+            referencedRelation: "districts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_environment_data: {
         Row: {

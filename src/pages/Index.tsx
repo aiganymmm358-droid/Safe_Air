@@ -4,7 +4,7 @@ import { GamificationPanel } from "@/components/GamificationPanel";
 import { PollutionMap } from "@/components/PollutionMap";
 import { SocialFeed } from "@/components/SocialFeed";
 import { HealthRecommendations } from "@/components/HealthRecommendations";
-import { DistrictBattle } from "@/components/DistrictBattle";
+
 import { QuickActions } from "@/components/QuickActions";
 import { Sparkles } from "lucide-react";
 
@@ -70,9 +70,18 @@ const Index = () => {
               <SocialFeed />
             </div>
 
-            {/* District Battle */}
-            <div>
-              <DistrictBattle />
+            {/* District Battle - Hidden on Index, use dedicated page */}
+            <div className="glass-card rounded-2xl p-6 shadow-elevated">
+              <h3 className="font-display font-bold text-lg mb-4">🏆 Битва районов</h3>
+              <p className="text-muted-foreground text-sm mb-4">
+                Соревнуйтесь с другими районами за звание самого экологичного!
+              </p>
+              <a 
+                href="/districts" 
+                className="inline-flex items-center gap-2 text-primary hover:underline text-sm font-medium"
+              >
+                Перейти к битве →
+              </a>
             </div>
           </div>
         </div>
