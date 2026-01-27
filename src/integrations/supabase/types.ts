@@ -17,28 +17,40 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          city_name: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
+          latitude: number | null
+          location_updated_at: string | null
+          longitude: number | null
           updated_at: string
           user_id: string
         }
         Insert: {
           avatar_url?: string | null
+          city_name?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          latitude?: number | null
+          location_updated_at?: string | null
+          longitude?: number | null
           updated_at?: string
           user_id: string
         }
         Update: {
           avatar_url?: string | null
+          city_name?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          latitude?: number | null
+          location_updated_at?: string | null
+          longitude?: number | null
           updated_at?: string
           user_id?: string
         }
@@ -143,6 +155,63 @@ export type Database = {
           task_name?: string
           user_id?: string
           xp_reward?: number
+        }
+        Relationships: []
+      }
+      user_environment_data: {
+        Row: {
+          aqi_category: string | null
+          city_name: string | null
+          current_aqi: number | null
+          humidity: number | null
+          id: string
+          latitude: number
+          longitude: number
+          pressure: number | null
+          temperature: number | null
+          updated_at: string
+          user_id: string
+          uv_index: number | null
+          visibility: number | null
+          weather_description: string | null
+          weather_icon: string | null
+          wind_speed: number | null
+        }
+        Insert: {
+          aqi_category?: string | null
+          city_name?: string | null
+          current_aqi?: number | null
+          humidity?: number | null
+          id?: string
+          latitude: number
+          longitude: number
+          pressure?: number | null
+          temperature?: number | null
+          updated_at?: string
+          user_id: string
+          uv_index?: number | null
+          visibility?: number | null
+          weather_description?: string | null
+          weather_icon?: string | null
+          wind_speed?: number | null
+        }
+        Update: {
+          aqi_category?: string | null
+          city_name?: string | null
+          current_aqi?: number | null
+          humidity?: number | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          pressure?: number | null
+          temperature?: number | null
+          updated_at?: string
+          user_id?: string
+          uv_index?: number | null
+          visibility?: number | null
+          weather_description?: string | null
+          weather_icon?: string | null
+          wind_speed?: number | null
         }
         Relationships: []
       }
@@ -278,6 +347,25 @@ export type Database = {
         Returns: undefined
       }
       update_user_streak: { Args: { _user_id: string }; Returns: number }
+      upsert_user_environment: {
+        Args: {
+          _aqi_category?: string
+          _city_name?: string
+          _current_aqi?: number
+          _humidity?: number
+          _latitude: number
+          _longitude: number
+          _pressure?: number
+          _temperature?: number
+          _user_id: string
+          _uv_index?: number
+          _visibility?: number
+          _weather_description?: string
+          _weather_icon?: string
+          _wind_speed?: number
+        }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

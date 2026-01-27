@@ -1,1 +1,7 @@
 project_id = "piafxufmgnikjmngdxft"
+
+[functions.waqi-data]
+verify_jwt = false
+
+[functions.user-environment]
+verify_jwt = false
