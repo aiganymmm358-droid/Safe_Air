@@ -1,9 +1,13 @@
-import { Heart, MessageCircle, Share2, CheckCircle, TreePine, Bike, Recycle, AlertCircle, MessageSquare, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { Heart, MessageCircle, Share2, CheckCircle, TreePine, Bike, Recycle, AlertCircle, MessageSquare, Loader2, Pencil, Flag, MoreHorizontal } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useCommunityPosts } from "@/hooks/useCommunityPosts";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
+import { EditPostDialog } from "./EditPostDialog";
+import { ReportPostDialog } from "./ReportPostDialog";
 
 interface SocialFeedProps {
   onRefreshNeeded?: () => void;
@@ -32,15 +36,16 @@ const getActionColor = (type: string) => {
 export const SocialFeed = ({ onRefreshNeeded }: SocialFeedProps) => {
   const { user } = useAuthContext();
   const { posts, isLoading, likePost, refreshPosts } = useCommunityPosts();
-
-  // Expose refresh function
-  if (onRefreshNeeded) {
-    // This will be called by parent when needed
-  }
+  const [editingPost, setEditingPost] = useState<{ id: string; content: string; impact_description: string | null } | null>(null);
+  const [reportingPostId, setReportingPostId] = useState<string | null>(null);
 
   const handleLike = (postId: string) => {
     if (!user) return;
     likePost(postId);
+  };
+
+  const handlePostUpdated = () => {
+    refreshPosts();
   };
 
   if (isLoading) {
@@ -79,6 +84,7 @@ export const SocialFeed = ({ onRefreshNeeded }: SocialFeedProps) => {
               addSuffix: true, 
               locale: ru 
             });
+            const isOwner = user?.id === post.user_id;
             
             return (
               <div
@@ -107,8 +113,38 @@ export const SocialFeed = ({ onRefreshNeeded }: SocialFeedProps) => {
                       <span className="text-xs text-muted-foreground">{timeAgo}</span>
                     </div>
                   </div>
-                  <div className={`w-8 h-8 rounded-lg ${getActionColor(post.post_type)} flex items-center justify-center`}>
-                    <Icon className="w-4 h-4" />
+                  <div className="flex items-center gap-2">
+                    <div className={`w-8 h-8 rounded-lg ${getActionColor(post.post_type)} flex items-center justify-center`}>
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    {user && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger className="p-1 hover:bg-muted rounded-md transition-colors">
+                          <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {isOwner && (
+                            <DropdownMenuItem onClick={() => setEditingPost({
+                              id: post.id,
+                              content: post.content,
+                              impact_description: post.impact_description
+                            })}>
+                              <Pencil className="w-4 h-4 mr-2" />
+                              Редактировать
+                            </DropdownMenuItem>
+                          )}
+                          {!isOwner && (
+                            <DropdownMenuItem 
+                              onClick={() => setReportingPostId(post.id)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Flag className="w-4 h-4 mr-2" />
+                              Пожаловаться
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </div>
                 </div>
 
@@ -146,6 +182,26 @@ export const SocialFeed = ({ onRefreshNeeded }: SocialFeedProps) => {
           })
         )}
       </div>
+
+      {/* Edit Post Dialog */}
+      {editingPost && (
+        <EditPostDialog
+          open={!!editingPost}
+          onOpenChange={(open) => !open && setEditingPost(null)}
+          post={editingPost}
+          onPostUpdated={handlePostUpdated}
+        />
+      )}
+
+      {/* Report Post Dialog */}
+      {reportingPostId && (
+        <ReportPostDialog
+          open={!!reportingPostId}
+          onOpenChange={(open) => !open && setReportingPostId(null)}
+          postId={reportingPostId}
+          onReported={handlePostUpdated}
+        />
+      )}
     </div>
   );
 };
