@@ -2,10 +2,9 @@ import { X, AlertTriangle } from 'lucide-react';
 import { 
   PollutionSource, 
   harmLevelColors, 
-  harmLevelLabels, 
-  categoryLabels, 
   categoryIcons 
 } from '@/data/pollutionSources';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PollutionSourcePanelProps {
   source: PollutionSource;
@@ -13,7 +12,25 @@ interface PollutionSourcePanelProps {
 }
 
 export const PollutionSourcePanel = ({ source, onClose }: PollutionSourcePanelProps) => {
+  const { t } = useLanguage();
   const color = harmLevelColors[source.harmLevel];
+
+  const harmLevelLabels = {
+    low: t.pollutionSources.low,
+    medium: t.pollutionSources.medium,
+    high: t.pollutionSources.high,
+    critical: t.pollutionSources.critical,
+  };
+
+  const categoryLabels = {
+    power: t.pollutionSources.power,
+    industrial: t.pollutionSources.industrial,
+    transport: t.pollutionSources.transport,
+    construction: t.pollutionSources.construction,
+    heating: t.pollutionSources.heating,
+    oil_gas: t.pollutionSources.oil_gas,
+    mining: t.pollutionSources.mining,
+  };
 
   return (
     <div className="absolute top-4 left-4 z-20 w-80 glass-card rounded-2xl p-4 shadow-elevated animate-scale-in">
@@ -55,7 +72,7 @@ export const PollutionSourcePanel = ({ source, onClose }: PollutionSourcePanelPr
       {/* Emissions */}
       {source.emissions && (
         <div className="bg-muted/50 rounded-lg p-3">
-          <p className="text-xs font-medium text-muted-foreground mb-2">Основные выбросы</p>
+          <p className="text-xs font-medium text-muted-foreground mb-2">{t.pollutionSources.mainEmissions}</p>
           <div className="flex flex-wrap gap-1.5">
             {source.emissions.split(', ').map((emission, i) => (
               <span 

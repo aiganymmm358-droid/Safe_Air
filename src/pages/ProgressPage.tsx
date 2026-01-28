@@ -6,9 +6,11 @@ import { Trophy, TrendingUp, Loader2, Flame, Star } from "lucide-react";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { useUserProgress } from "@/hooks/useUserProgress";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const ProgressPage = () => {
   const navigate = useNavigate();
+  const { t, language } = useLanguage();
   const { isAuthenticated, isLoading: authLoading } = useAuthContext();
   const {
     progress,
@@ -32,18 +34,45 @@ const ProgressPage = () => {
     }
   }, [isAuthenticated]);
 
+  // Helper function for day pluralization based on language
+  const getDaysWord = (days: number): string => {
+    if (language === 'en') {
+      return days === 1 ? 'day' : 'days';
+    }
+    if (language === 'kz') {
+      return 'күн';
+    }
+    // Russian pluralization
+    const lastDigit = days % 10;
+    const lastTwoDigits = days % 100;
+    
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 14) return 'дней';
+    if (lastDigit === 1) return 'день';
+    if (lastDigit >= 2 && lastDigit <= 4) return 'дня';
+    return 'дней';
+  };
+
+  // Get date locale based on language
+  const getDateLocale = () => {
+    switch (language) {
+      case 'en': return 'en-US';
+      case 'kz': return 'kk-KZ';
+      default: return 'ru-RU';
+    }
+  };
+
   // Show login prompt if not authenticated
   if (!authLoading && !isAuthenticated) {
     return (
       <div className="p-6 max-w-6xl mx-auto">
         <div className="glass-card rounded-2xl p-12 text-center">
           <Trophy className="w-16 h-16 text-accent mx-auto mb-4" />
-          <h2 className="text-2xl font-display font-bold mb-2">Войдите для отслеживания прогресса</h2>
+          <h2 className="text-2xl font-display font-bold mb-2">{t.auth.loginToTrack}</h2>
           <p className="text-muted-foreground mb-6">
-            Зарегистрируйтесь или войдите, чтобы сохранять достижения, получать награды и соревноваться с другими
+            {t.auth.loginPrompt}
           </p>
           <Button onClick={() => navigate('/auth')} size="lg">
-            Войти / Зарегистрироваться
+            {t.auth.login} / {t.auth.register}
           </Button>
         </div>
       </div>
@@ -69,14 +98,14 @@ const ProgressPage = () => {
         <div>
           <h1 className="text-3xl font-display font-bold flex items-center gap-3">
             <Trophy className="w-8 h-8 text-accent" />
-            Мой прогресс
+            {t.progress.title}
           </h1>
-          <p className="text-muted-foreground mt-1">Отслеживайте свои достижения и развивайтесь</p>
+          <p className="text-muted-foreground mt-1">{t.progress.trackAchievements}</p>
         </div>
         {progress && progress.streak_days > 0 && (
           <div className="eco-badge text-lg flex items-center gap-2">
             <Flame className="w-5 h-5" />
-            {progress.streak_days} {getDaysWord(progress.streak_days)} подряд
+            {progress.streak_days} {getDaysWord(progress.streak_days)} {language === 'ru' ? 'подряд' : language === 'kz' ? 'қатарынан' : 'in a row'}
           </div>
         )}
       </div>
@@ -107,7 +136,7 @@ const ProgressPage = () => {
         <div className="glass-card rounded-2xl p-6">
           <h3 className="font-display font-bold text-lg flex items-center gap-2 mb-4">
             <Star className="w-5 h-5 text-accent" />
-            Мои достижения ({achievements.length})
+            {t.progress.myAchievements} ({achievements.length})
           </h3>
           <div className="space-y-3">
             {achievements.length > 0 ? (
@@ -118,7 +147,7 @@ const ProgressPage = () => {
                     <p className="font-medium">{achievement.achievement_name}</p>
                     <p className="text-sm text-muted-foreground">{achievement.achievement_description}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {new Date(achievement.unlocked_at).toLocaleDateString('ru-RU', {
+                      {new Date(achievement.unlocked_at).toLocaleDateString(getDateLocale(), {
                         day: 'numeric',
                         month: 'long',
                       })}
@@ -129,7 +158,7 @@ const ProgressPage = () => {
             ) : (
               <div className="text-center py-8 text-muted-foreground">
                 <Star className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>Выполняйте задания, чтобы получить достижения!</p>
+                <p>{t.progress.completeTasksForAchievements}</p>
               </div>
             )}
           </div>
@@ -139,7 +168,7 @@ const ProgressPage = () => {
         <div className="glass-card rounded-2xl p-6">
           <h3 className="font-display font-bold text-lg flex items-center gap-2 mb-4">
             <TrendingUp className="w-5 h-5 text-primary" />
-            Недавняя активность
+            {t.progress.recentActivity}
           </h3>
           {recentActions.length > 0 ? (
             <div className="space-y-2">
@@ -148,7 +177,7 @@ const ProgressPage = () => {
                   <div>
                     <p className="text-sm">{action.action_description || action.action_type}</p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(action.created_at).toLocaleDateString('ru-RU', {
+                      {new Date(action.created_at).toLocaleDateString(getDateLocale(), {
                         day: 'numeric',
                         month: 'short',
                         hour: '2-digit',
@@ -170,7 +199,7 @@ const ProgressPage = () => {
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               <TrendingUp className="w-12 h-12 mx-auto mb-2 opacity-50" />
-              <p>Начните выполнять задания для отслеживания активности</p>
+              <p>{t.progress.startTasksToTrack}</p>
             </div>
           )}
         </div>
@@ -180,34 +209,23 @@ const ProgressPage = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="glass-card rounded-xl p-4 text-center">
           <p className="text-3xl font-bold text-primary">{progress?.total_xp_earned || 0}</p>
-          <p className="text-sm text-muted-foreground">Всего XP</p>
+          <p className="text-sm text-muted-foreground">{t.progress.totalXP}</p>
         </div>
         <div className="glass-card rounded-xl p-4 text-center">
           <p className="text-3xl font-bold text-accent">{progress?.total_coins_earned || 0}</p>
-          <p className="text-sm text-muted-foreground">Всего монет</p>
+          <p className="text-sm text-muted-foreground">{t.progress.totalCoins}</p>
         </div>
         <div className="glass-card rounded-xl p-4 text-center">
           <p className="text-3xl font-bold text-secondary">{achievements.length}</p>
-          <p className="text-sm text-muted-foreground">Достижений</p>
+          <p className="text-sm text-muted-foreground">{t.progress.achievements}</p>
         </div>
         <div className="glass-card rounded-xl p-4 text-center">
           <p className="text-3xl font-bold">{progress?.level || 1}</p>
-          <p className="text-sm text-muted-foreground">Уровень</p>
+          <p className="text-sm text-muted-foreground">{t.progress.level}</p>
         </div>
       </div>
     </div>
   );
 };
-
-// Helper function for Russian day pluralization
-function getDaysWord(days: number): string {
-  const lastDigit = days % 10;
-  const lastTwoDigits = days % 100;
-  
-  if (lastTwoDigits >= 11 && lastTwoDigits <= 14) return 'дней';
-  if (lastDigit === 1) return 'день';
-  if (lastDigit >= 2 && lastDigit <= 4) return 'дня';
-  return 'дней';
-}
 
 export default ProgressPage;

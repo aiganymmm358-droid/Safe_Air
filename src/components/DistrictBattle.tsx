@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Trophy, TrendingUp, TrendingDown, Minus, Medal, Gift, Users, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface District {
   id: string;
@@ -36,6 +37,7 @@ const getChangeIcon = (rank: number, prevRank?: number) => {
 };
 
 export const DistrictBattle = ({ districts, userDistrictId, isLoading, initialVisibleCount = 10 }: DistrictBattleProps) => {
+  const { t } = useLanguage();
   const [showAll, setShowAll] = useState(false);
   
   const visibleDistricts = showAll ? districts : districts.slice(0, initialVisibleCount);
@@ -59,11 +61,11 @@ export const DistrictBattle = ({ districts, userDistrictId, isLoading, initialVi
       <div className="flex items-center justify-between mb-6">
         <h3 className="font-display font-bold text-lg flex items-center gap-2">
           <Trophy className="w-5 h-5 text-accent" />
-          Рейтинг районов
+          {t.districtBattle.ranking}
         </h3>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Gift className="w-4 h-4" />
-          Приз: 50,000 Eco-Coins
+          {t.districtBattle.prize}: 50,000 Eco-Coins
         </div>
       </div>
 
@@ -91,7 +93,7 @@ export const DistrictBattle = ({ districts, userDistrictId, isLoading, initialVi
                 <span className="font-semibold">{district.name}</span>
                 {userDistrictId === district.id && (
                   <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
-                    Ваш район
+                    {t.districtBattle.yourDistrict}
                   </span>
                 )}
                 {getChangeIcon(district.current_rank)}
@@ -109,7 +111,7 @@ export const DistrictBattle = ({ districts, userDistrictId, isLoading, initialVi
             {/* Score */}
             <div className="text-right">
               <p className="font-display font-bold text-lg">{district.total_score.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground">очков</p>
+              <p className="text-xs text-muted-foreground">{t.districtBattle.points}</p>
             </div>
           </div>
         ))}
@@ -125,12 +127,12 @@ export const DistrictBattle = ({ districts, userDistrictId, isLoading, initialVi
           {showAll ? (
             <>
               <ChevronUp className="w-4 h-4 mr-2" />
-              Скрыть ({districts.length - initialVisibleCount})
+              {t.districtBattle.hide} ({districts.length - initialVisibleCount})
             </>
           ) : (
             <>
               <ChevronDown className="w-4 h-4 mr-2" />
-              Показать ещё ({districts.length - initialVisibleCount})
+              {t.districtBattle.showMore} ({districts.length - initialVisibleCount})
             </>
           )}
         </Button>

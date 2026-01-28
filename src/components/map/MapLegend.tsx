@@ -1,7 +1,6 @@
+import { useLanguage } from '@/contexts/LanguageContext';
 import { 
   harmLevelColors, 
-  harmLevelLabels, 
-  categoryLabels, 
   categoryIcons,
   type PollutionCategory,
   type HarmLevel 
@@ -11,24 +10,43 @@ interface MapLegendProps {
   showPollutionSources: boolean;
 }
 
-const aqiLevels = [
-  { color: 'hsl(152, 80%, 45%)', label: '0-50', text: 'Хорошо' },
-  { color: 'hsl(48, 95%, 50%)', label: '51-100', text: 'Умеренно' },
-  { color: 'hsl(28, 95%, 55%)', label: '101-150', text: 'Для чувств.' },
-  { color: 'hsl(12, 85%, 55%)', label: '151-200', text: 'Нездорово' },
-  { color: 'hsl(340, 75%, 50%)', label: '201-300', text: 'Очень нездорово' },
-  { color: 'hsl(280, 60%, 35%)', label: '300+', text: 'Опасно' },
-];
-
 const harmLevels: HarmLevel[] = ['low', 'medium', 'high', 'critical'];
-const categories: PollutionCategory[] = ['power', 'industrial', 'transport', 'construction', 'heating'];
+const categories: PollutionCategory[] = ['power', 'industrial', 'transport', 'construction', 'heating', 'oil_gas', 'mining'];
 
 export const MapLegend = ({ showPollutionSources }: MapLegendProps) => {
+  const { t } = useLanguage();
+
+  const aqiLevels = [
+    { color: 'hsl(152, 80%, 45%)', label: '0-50', text: t.mapLegend.good },
+    { color: 'hsl(48, 95%, 50%)', label: '51-100', text: t.mapLegend.moderate },
+    { color: 'hsl(28, 95%, 55%)', label: '101-150', text: t.mapLegend.sensitive },
+    { color: 'hsl(12, 85%, 55%)', label: '151-200', text: t.mapLegend.unhealthy },
+    { color: 'hsl(340, 75%, 50%)', label: '201-300', text: t.mapLegend.veryUnhealthy },
+    { color: 'hsl(280, 60%, 35%)', label: '300+', text: t.mapLegend.hazardous },
+  ];
+
+  const harmLevelLabels: Record<HarmLevel, string> = {
+    low: t.pollutionSources.low,
+    medium: t.pollutionSources.medium,
+    high: t.pollutionSources.high,
+    critical: t.pollutionSources.critical,
+  };
+
+  const categoryLabels: Record<PollutionCategory, string> = {
+    power: t.pollutionSources.power,
+    industrial: t.pollutionSources.industrial,
+    transport: t.pollutionSources.transport,
+    construction: t.pollutionSources.construction,
+    heating: t.pollutionSources.heating,
+    oil_gas: t.pollutionSources.oil_gas,
+    mining: t.pollutionSources.mining,
+  };
+
   return (
     <div className="absolute bottom-4 left-4 z-10 glass-card rounded-xl p-3 max-w-xs">
       {/* AQI Legend */}
       <div className="mb-3">
-        <p className="text-xs font-semibold mb-2">Качество воздуха (AQI)</p>
+        <p className="text-xs font-semibold mb-2">{t.mapLegend.airQuality}</p>
         <div className="grid grid-cols-3 gap-1">
           {aqiLevels.map((item, i) => (
             <div key={i} className="flex items-center gap-1.5">
@@ -46,7 +64,7 @@ export const MapLegend = ({ showPollutionSources }: MapLegendProps) => {
       {showPollutionSources && (
         <>
           <div className="border-t border-border pt-3 mb-2">
-            <p className="text-xs font-semibold mb-2">Уровень вредности</p>
+            <p className="text-xs font-semibold mb-2">{t.pollutionSources.harmLevel}</p>
             <div className="grid grid-cols-2 gap-1">
               {harmLevels.map((level) => (
                 <div key={level} className="flex items-center gap-1.5">
@@ -63,7 +81,7 @@ export const MapLegend = ({ showPollutionSources }: MapLegendProps) => {
           </div>
 
           <div className="border-t border-border pt-2">
-            <p className="text-xs font-semibold mb-2">Категории</p>
+            <p className="text-xs font-semibold mb-2">{t.pollutionSources.categories}</p>
             <div className="flex flex-wrap gap-1">
               {categories.map((cat) => (
                 <span
