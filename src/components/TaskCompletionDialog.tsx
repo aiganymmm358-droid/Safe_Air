@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
 import { AVAILABLE_TASKS } from '@/data/availableTasks';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TaskCompletionDialogProps {
   open: boolean;
@@ -27,6 +28,7 @@ export function TaskCompletionDialog({
   taskName,
   onConfirm,
 }: TaskCompletionDialogProps) {
+  const { t } = useLanguage();
   const [note, setNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -47,29 +49,29 @@ export function TaskCompletionDialog({
   const getVerificationMessage = () => {
     switch (taskId) {
       case 'use_public_transport':
-        return 'Каким транспортом вы воспользовались?';
+        return t.tasks.promptPublicTransport;
       case 'walk_instead_drive':
-        return 'Примерно сколько км вы прошли?';
+        return t.tasks.promptWalk;
       case 'reduce_energy':
-        return 'Что именно вы отключили?';
+        return t.tasks.promptEnergy;
       case 'plant_care':
-        return 'Какое растение вы полили/посадили?';
+        return t.tasks.promptPlant;
       case 'invite_friend':
-        return 'Имя друга, которого пригласили?';
+        return t.tasks.promptFriend;
       case 'report_pollution':
-        return 'Что и где вы обнаружили?';
+        return t.tasks.promptPollution;
       case 'learn_pm25':
       case 'learn_sources':
       case 'learn_protection':
-        return 'Что нового вы узнали? (кратко)';
+        return t.tasks.promptLearning;
       case 'ventilate_home':
-        return 'Как долго проветривали?';
+        return t.tasks.promptVentilate;
       case 'wear_mask':
-        return 'Какой тип маски использовали?';
+        return t.tasks.promptMask;
       case 'morning_exercise':
-        return 'Какие упражнения выполняли?';
+        return t.tasks.promptExercise;
       default:
-        return 'Опишите кратко выполнение задания';
+        return t.tasks.promptDefault;
     }
   };
 
@@ -83,7 +85,7 @@ export function TaskCompletionDialog({
             ) : (
               <CheckCircle2 className="w-5 h-5 text-primary" />
             )}
-            Подтверждение выполнения
+            {t.tasks.confirmCompletion}
           </DialogTitle>
           <DialogDescription>
             {taskName}
@@ -94,7 +96,7 @@ export function TaskCompletionDialog({
           {isManualTask ? (
             <>
               <p className="text-sm text-muted-foreground">
-                Это задание требует подтверждения. Пожалуйста, опишите кратко, как вы его выполнили.
+                {t.tasks.taskRequiresConfirm}
               </p>
               <div className="space-y-2">
                 <label className="text-sm font-medium">
@@ -103,7 +105,7 @@ export function TaskCompletionDialog({
                 <Textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  placeholder="Например: Прошёл 2 км до работы пешком..."
+                  placeholder={t.tasks.exampleDescription}
                   className="min-h-[80px]"
                   maxLength={200}
                 />
@@ -116,9 +118,9 @@ export function TaskCompletionDialog({
             <div className="flex items-center gap-3 p-4 bg-primary/10 rounded-lg">
               <CheckCircle2 className="w-8 h-8 text-primary" />
               <div>
-                <p className="font-medium">Задание проверено автоматически</p>
+                <p className="font-medium">{t.tasks.autoVerified}</p>
                 <p className="text-sm text-muted-foreground">
-                  Система зафиксировала выполнение этого действия
+                  {t.tasks.systemRecorded}
                 </p>
               </div>
             </div>
@@ -127,13 +129,13 @@ export function TaskCompletionDialog({
 
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Отмена
+            {t.tasks.cancel}
           </Button>
           <Button
             onClick={handleConfirm}
             disabled={isSubmitting || (isManualTask && note.trim().length < 3)}
           >
-            {isSubmitting ? '⏳' : '✓'} Подтвердить
+            {isSubmitting ? '⏳' : '✓'} {t.tasks.confirm}
           </Button>
         </DialogFooter>
       </DialogContent>

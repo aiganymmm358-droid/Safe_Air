@@ -23,7 +23,7 @@ export const GamificationPanel = ({ level, xp, xpToNext, ecoCoins, streakDays }:
           {t.progress.yourProgress}
         </h3>
         <div className="eco-badge">
-          🔥 {streakDays} {t.progress.daysInRow}
+          🔥 {streakDays} {t.gamification.daysStreak}
         </div>
       </div>
 
@@ -36,7 +36,7 @@ export const GamificationPanel = ({ level, xp, xpToNext, ecoCoins, streakDays }:
             </div>
             <div>
               <p className="font-semibold">{t.progress.ecoDefender}</p>
-              <p className="text-sm text-muted-foreground">{xp} / {xpToNext} XP</p>
+              <p className="text-sm text-muted-foreground">{xp} / {xpToNext} XP {t.gamification.nextLevel}</p>
             </div>
           </div>
           <div className="flex items-center gap-2 bg-accent/20 px-3 py-1.5 rounded-full">

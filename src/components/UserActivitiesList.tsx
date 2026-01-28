@@ -1,6 +1,7 @@
 import { Clock, CheckCircle, XCircle, TreeDeciduous, Bike, BookOpen, Recycle, AlertTriangle, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS, kk } from 'date-fns/locale';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Activity {
   id: string;
@@ -26,42 +27,52 @@ const activityIcons: Record<string, any> = {
   recycling: Recycle,
 };
 
-const activityLabels: Record<string, string> = {
-  tree_planted: 'Посадка дерева',
-  report_sent: 'Репорт о нарушении',
-  car_free_day: 'День без авто',
-  eco_lesson: 'Эко-урок',
-  cleanup: 'Уборка территории',
-  recycling: 'Сдача вторсырья',
-};
-
-const statusConfig = {
-  pending: {
-    icon: Clock,
-    label: 'На проверке',
-    color: 'text-amber-500',
-    bg: 'bg-amber-500/10'
-  },
-  verified: {
-    icon: CheckCircle,
-    label: 'Подтверждено',
-    color: 'text-green-500',
-    bg: 'bg-green-500/10'
-  },
-  rejected: {
-    icon: XCircle,
-    label: 'Отклонено',
-    color: 'text-red-500',
-    bg: 'bg-red-500/10'
-  }
-};
-
 export function UserActivitiesList({ activities }: UserActivitiesListProps) {
+  const { t, language } = useLanguage();
+
+  const activityLabels: Record<string, string> = {
+    tree_planted: t.districts.plantTree,
+    report_sent: t.districts.sendReport,
+    car_free_day: t.districts.carFreeDay,
+    eco_lesson: t.districts.takeEcoLesson,
+    cleanup: t.districts.areaCleanup,
+    recycling: t.districts.recycling,
+  };
+
+  const statusConfig = {
+    pending: {
+      icon: Clock,
+      label: language === 'en' ? 'Pending' : language === 'kz' ? 'Күтуде' : 'На проверке',
+      color: 'text-amber-500',
+      bg: 'bg-amber-500/10'
+    },
+    verified: {
+      icon: CheckCircle,
+      label: language === 'en' ? 'Verified' : language === 'kz' ? 'Расталды' : 'Подтверждено',
+      color: 'text-green-500',
+      bg: 'bg-green-500/10'
+    },
+    rejected: {
+      icon: XCircle,
+      label: language === 'en' ? 'Rejected' : language === 'kz' ? 'Қабылданбады' : 'Отклонено',
+      color: 'text-red-500',
+      bg: 'bg-red-500/10'
+    }
+  };
+
+  const getDateLocale = () => {
+    switch (language) {
+      case 'en': return enUS;
+      case 'kz': return kk;
+      default: return ru;
+    }
+  };
+
   if (activities.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        <p>У вас пока нет активностей</p>
-        <p className="text-sm mt-1">Отправьте первую активность для участия в битве!</p>
+        <p>{language === 'en' ? 'You have no activities yet' : language === 'kz' ? 'Сізде әлі белсенділік жоқ' : 'У вас пока нет активностей'}</p>
+        <p className="text-sm mt-1">{language === 'en' ? 'Submit your first activity to join the battle!' : language === 'kz' ? 'Жарысқа қатысу үшін алғашқы белсенділікті жіберіңіз!' : 'Отправьте первую активность для участия в битве!'}</p>
       </div>
     );
   }
@@ -102,7 +113,7 @@ export function UserActivitiesList({ activities }: UserActivitiesListProps) {
 
               {activity.rejection_reason && (
                 <p className="text-sm text-red-500 mt-1">
-                  Причина: {activity.rejection_reason}
+                  {language === 'en' ? 'Reason' : language === 'kz' ? 'Себебі' : 'Причина'}: {activity.rejection_reason}
                 </p>
               )}
 
@@ -110,10 +121,10 @@ export function UserActivitiesList({ activities }: UserActivitiesListProps) {
                 <span>
                   {formatDistanceToNow(new Date(activity.created_at), {
                     addSuffix: true,
-                    locale: ru
+                    locale: getDateLocale()
                   })}
                 </span>
-                {activity.photo_url && <span>📷 Фото</span>}
+                {activity.photo_url && <span>📷 {language === 'en' ? 'Photo' : language === 'kz' ? 'Фото' : 'Фото'}</span>}
               </div>
             </div>
 
@@ -127,7 +138,7 @@ export function UserActivitiesList({ activities }: UserActivitiesListProps) {
                 {activity.verification_status === 'verified' ? '+' : ''}
                 {activity.points_awarded}
               </p>
-              <p className="text-xs text-muted-foreground">очков</p>
+              <p className="text-xs text-muted-foreground">{t.districtBattle.points}</p>
             </div>
           </div>
         );
