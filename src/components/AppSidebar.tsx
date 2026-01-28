@@ -1,6 +1,7 @@
-import { Map, Trophy, Heart, Users, Swords, Zap, Home } from "lucide-react";
+import { Map, Trophy, Heart, Users, Swords, Zap } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 import {
   Sidebar,
@@ -16,19 +17,21 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const mainItems = [
-  { title: "Карта AQI", url: "/", icon: Map, emoji: "🗺️" },
-  { title: "Мой прогресс", url: "/progress", icon: Trophy, emoji: "🏆" },
-  { title: "Здоровье", url: "/health", icon: Heart, emoji: "💚" },
-  { title: "Сообщество", url: "/community", icon: Users, emoji: "👥" },
-  { title: "Битва районов", url: "/districts", icon: Swords, emoji: "⚔️" },
-  { title: "Быстрые действия", url: "/actions", icon: Zap, emoji: "⚡" },
-];
-
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const { t } = useLanguage();
+
+  const mainItems = [
+    { title: t.nav.aqiMap, url: "/", icon: Map, emoji: "🗺️" },
+    { title: t.nav.myProgress, url: "/progress", icon: Trophy, emoji: "🏆" },
+    { title: t.nav.health, url: "/health", icon: Heart, emoji: "💚" },
+    { title: t.nav.community, url: "/community", icon: Users, emoji: "👥" },
+    { title: t.nav.districtBattle, url: "/districts", icon: Swords, emoji: "⚔️" },
+    { title: t.nav.quickActions, url: "/actions", icon: Zap, emoji: "⚡" },
+  ];
+
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border/50">
@@ -39,8 +42,8 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div>
-              <h1 className="font-display font-bold text-lg">SafeAir Pro</h1>
-              <p className="text-xs text-muted-foreground">Чистый воздух Казахстана</p>
+              <h1 className="font-display font-bold text-lg">{t.app.name}</h1>
+              <p className="text-xs text-muted-foreground">{t.app.tagline}</p>
             </div>
           )}
         </div>
@@ -48,11 +51,11 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Навигация</SidebarGroupLabel>
+          <SidebarGroupLabel>{t.nav.navigation}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton
                     asChild
                     isActive={location.pathname === item.url}
@@ -77,9 +80,9 @@ export function AppSidebar() {
       <SidebarFooter className="p-4">
         {!collapsed && (
           <div className="glass-card rounded-xl p-3 text-center">
-            <p className="text-xs text-muted-foreground">Ваш вклад</p>
+            <p className="text-xs text-muted-foreground">{t.app.yourContribution}</p>
             <p className="font-display font-bold text-primary">127 кг CO₂</p>
-            <p className="text-xs text-muted-foreground">предотвращено</p>
+            <p className="text-xs text-muted-foreground">{t.app.prevented}</p>
           </div>
         )}
       </SidebarFooter>

@@ -22,11 +22,13 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
 
 export function UserMenu() {
   const navigate = useNavigate();
   const { user, profile, roles, signOut, signOutAllDevices, isAuthenticated, isLoading } = useAuthContext();
+  const { t } = useLanguage();
   const [showLogoutAllDialog, setShowLogoutAllDialog] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
 
@@ -41,7 +43,7 @@ export function UserMenu() {
   if (!isAuthenticated) {
     return (
       <Button variant="outline" onClick={() => navigate('/auth')}>
-        Войти
+        {t.auth.login}
       </Button>
     );
   }
@@ -62,9 +64,9 @@ export function UserMenu() {
   };
 
   const getPrimaryRole = () => {
-    if (roles.some(r => r.role === 'admin')) return 'Администратор';
-    if (roles.some(r => r.role === 'moderator')) return 'Модератор';
-    return 'Пользователь';
+    if (roles.some(r => r.role === 'admin')) return t.common.administrator;
+    if (roles.some(r => r.role === 'moderator')) return t.common.moderator;
+    return t.common.user;
   };
 
   const handleSignOut = async () => {
@@ -72,9 +74,9 @@ export function UserMenu() {
     const result = await signOut();
     
     if (result.error) {
-      toast.error('Ошибка при выходе');
+      toast.error(t.toast.signOutError);
     } else {
-      toast.success('Вы успешно вышли');
+      toast.success(t.toast.signOutSuccess);
       navigate('/auth');
     }
     setIsSigningOut(false);
@@ -85,9 +87,9 @@ export function UserMenu() {
     const result = await signOutAllDevices();
     
     if (result.error) {
-      toast.error('Ошибка при выходе со всех устройств');
+      toast.error(t.toast.signOutError);
     } else {
-      toast.success('Вы вышли со всех устройств');
+      toast.success(t.toast.signOutSuccess);
       navigate('/auth');
     }
     setIsSigningOut(false);
@@ -117,7 +119,7 @@ export function UserMenu() {
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium">{profile?.full_name || 'Пользователь'}</p>
+              <p className="text-sm font-medium">{profile?.full_name || t.common.user}</p>
               <p className="text-xs text-muted-foreground">{user?.email}</p>
             </div>
           </DropdownMenuLabel>
@@ -126,12 +128,12 @@ export function UserMenu() {
 
           <DropdownMenuItem onClick={() => navigate('/profile')}>
             <User className="w-4 h-4 mr-2" />
-            Профиль
+            {t.auth.profile}
           </DropdownMenuItem>
 
           <DropdownMenuItem onClick={() => navigate('/settings')}>
             <Settings className="w-4 h-4 mr-2" />
-            Настройки
+            {t.header.settings}
           </DropdownMenuItem>
 
           {roles.some(r => r.role === 'admin') && (
@@ -148,7 +150,7 @@ export function UserMenu() {
             className="text-amber-600"
           >
             <Monitor className="w-4 h-4 mr-2" />
-            Выйти со всех устройств
+            {t.auth.logoutAll}
           </DropdownMenuItem>
 
           <DropdownMenuItem
@@ -161,7 +163,7 @@ export function UserMenu() {
             ) : (
               <LogOut className="w-4 h-4 mr-2" />
             )}
-            Выйти
+            {t.auth.logout}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -169,14 +171,13 @@ export function UserMenu() {
       <AlertDialog open={showLogoutAllDialog} onOpenChange={setShowLogoutAllDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Выйти со всех устройств?</AlertDialogTitle>
+            <AlertDialogTitle>{t.auth.logoutAllConfirm}</AlertDialogTitle>
             <AlertDialogDescription>
-              Это действие завершит все активные сессии на всех устройствах, включая текущее.
-              Вам потребуется войти заново.
+              {t.auth.logoutAllDescription}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isSigningOut}>Отмена</AlertDialogCancel>
+            <AlertDialogCancel disabled={isSigningOut}>{t.common.cancel}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleSignOutAllDevices}
               disabled={isSigningOut}
@@ -185,10 +186,10 @@ export function UserMenu() {
               {isSigningOut ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Выход...
+                  {t.common.loading}
                 </>
               ) : (
-                'Выйти со всех устройств'
+                t.auth.logoutAll
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

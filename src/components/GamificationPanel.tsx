@@ -1,5 +1,6 @@
 import { Trophy, Coins } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface GamificationPanelProps {
   level: number;
@@ -11,6 +12,7 @@ interface GamificationPanelProps {
 }
 
 export const GamificationPanel = ({ level, xp, xpToNext, ecoCoins, streakDays }: GamificationPanelProps) => {
+  const { t } = useLanguage();
   const xpProgress = (xp / xpToNext) * 100;
 
   return (
@@ -18,10 +20,10 @@ export const GamificationPanel = ({ level, xp, xpToNext, ecoCoins, streakDays }:
       <div className="flex items-center justify-between mb-6">
         <h3 className="font-display font-bold text-lg flex items-center gap-2">
           <Trophy className="w-5 h-5 text-accent" />
-          Ваш прогресс
+          {t.progress.yourProgress}
         </h3>
         <div className="eco-badge">
-          🔥 {streakDays} дней
+          🔥 {streakDays} {t.progress.daysInRow}
         </div>
       </div>
 
@@ -33,7 +35,7 @@ export const GamificationPanel = ({ level, xp, xpToNext, ecoCoins, streakDays }:
               <span className="text-xl font-display font-bold text-primary-foreground">{level}</span>
             </div>
             <div>
-              <p className="font-semibold">Эко-Защитник</p>
+              <p className="font-semibold">{t.progress.ecoDefender}</p>
               <p className="text-sm text-muted-foreground">{xp} / {xpToNext} XP</p>
             </div>
           </div>
