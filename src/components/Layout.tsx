@@ -2,16 +2,19 @@ import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/s
 import { AppSidebar } from "@/components/AppSidebar";
 import { UserMenu } from "@/components/UserMenu";
 import { LocationWidget } from "@/components/LocationWidget";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Outlet } from "react-router-dom";
 import { Bell } from "lucide-react";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function Layout() {
   const { profile, isAuthenticated } = useAuthContext();
+  const { t } = useLanguage();
 
   const getDisplayName = () => {
     if (profile?.full_name) return profile.full_name;
-    return 'Гость';
+    return t.common.guest;
   };
 
   return (
@@ -24,7 +27,7 @@ export function Layout() {
             <div className="flex items-center gap-4">
               <SidebarTrigger className="hover:bg-muted rounded-lg p-2" />
               <div className="hidden md:block">
-                <p className="text-sm text-muted-foreground">Добро пожаловать,</p>
+                <p className="text-sm text-muted-foreground">{t.header.welcome}</p>
                 <p className="font-semibold">{getDisplayName()} {isAuthenticated ? '👋' : ''}</p>
               </div>
               {/* Location and Weather Widget */}
@@ -37,6 +40,7 @@ export function Layout() {
               <div className="lg:hidden">
                 <LocationWidget />
               </div>
+              <LanguageSwitcher />
               <button className="p-2 hover:bg-muted rounded-lg relative">
                 <Bell className="w-5 h-5" />
                 <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />

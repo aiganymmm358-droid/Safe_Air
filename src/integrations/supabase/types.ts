@@ -73,6 +73,121 @@ export type Database = {
           },
         ]
       }
+      challenge_messages: {
+        Row: {
+          challenge_id: string
+          content: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          content: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_messages_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenge_participants: {
+        Row: {
+          challenge_id: string
+          completed_at: string | null
+          id: string
+          is_completed: boolean | null
+          joined_at: string
+          progress: number | null
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          completed_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          joined_at?: string
+          progress?: number | null
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          completed_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          joined_at?: string
+          progress?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_participants_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenges: {
+        Row: {
+          created_at: string
+          description: string | null
+          emoji: string | null
+          end_date: string
+          goal_description: string | null
+          id: string
+          is_active: boolean | null
+          max_participants: number | null
+          reward_coins: number | null
+          reward_xp: number | null
+          start_date: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          emoji?: string | null
+          end_date: string
+          goal_description?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_participants?: number | null
+          reward_coins?: number | null
+          reward_xp?: number | null
+          start_date?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          emoji?: string | null
+          end_date?: string
+          goal_description?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_participants?: number | null
+          reward_coins?: number | null
+          reward_xp?: number | null
+          start_date?: string
+          title?: string
+        }
+        Relationships: []
+      }
       community_posts: {
         Row: {
           comments_count: number

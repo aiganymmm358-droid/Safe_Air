@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { GeolocationProvider } from "@/contexts/GeolocationContext";
 import { TaskVerificationProvider } from "@/contexts/TaskVerificationContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { Layout } from "@/components/Layout";
 import MapPage from "./pages/MapPage";
 import ProgressPage from "./pages/ProgressPage";
@@ -20,30 +21,32 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <GeolocationProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <TaskVerificationProvider>
-              <Routes>
-                <Route path="/auth" element={<AuthPage />} />
-                <Route element={<Layout />}>
-                  <Route path="/" element={<MapPage />} />
-                  <Route path="/progress" element={<ProgressPage />} />
-                  <Route path="/health" element={<HealthPage />} />
-                  <Route path="/community" element={<CommunityPage />} />
-                  <Route path="/districts" element={<DistrictsPage />} />
-                  <Route path="/actions" element={<ActionsPage />} />
-                </Route>
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </TaskVerificationProvider>
-          </BrowserRouter>
-        </TooltipProvider>
-      </GeolocationProvider>
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <GeolocationProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <TaskVerificationProvider>
+                <Routes>
+                  <Route path="/auth" element={<AuthPage />} />
+                  <Route element={<Layout />}>
+                    <Route path="/" element={<MapPage />} />
+                    <Route path="/progress" element={<ProgressPage />} />
+                    <Route path="/health" element={<HealthPage />} />
+                    <Route path="/community" element={<CommunityPage />} />
+                    <Route path="/districts" element={<DistrictsPage />} />
+                    <Route path="/actions" element={<ActionsPage />} />
+                  </Route>
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </TaskVerificationProvider>
+            </BrowserRouter>
+          </TooltipProvider>
+        </GeolocationProvider>
+      </AuthProvider>
+    </LanguageProvider>
   </QueryClientProvider>
 );
 
