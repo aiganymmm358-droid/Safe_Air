@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface DeletePostDialogProps {
   open: boolean;
@@ -18,6 +19,7 @@ interface DeletePostDialogProps {
 }
 
 export const DeletePostDialog = ({ open, onOpenChange, onConfirm }: DeletePostDialogProps) => {
+  const { t } = useLanguage();
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
@@ -33,13 +35,13 @@ export const DeletePostDialog = ({ open, onOpenChange, onConfirm }: DeletePostDi
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Удалить пост?</AlertDialogTitle>
+          <AlertDialogTitle>{t.deletePost.title}</AlertDialogTitle>
           <AlertDialogDescription>
-            Это действие нельзя отменить. Пост будет удален навсегда вместе со всеми лайками.
+            {t.deletePost.description}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>Отмена</AlertDialogCancel>
+          <AlertDialogCancel disabled={isDeleting}>{t.deletePost.cancel}</AlertDialogCancel>
           <AlertDialogAction 
             onClick={handleDelete} 
             disabled={isDeleting}
@@ -48,10 +50,10 @@ export const DeletePostDialog = ({ open, onOpenChange, onConfirm }: DeletePostDi
             {isDeleting ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Удаление...
+                {t.deletePost.deleting}
               </>
             ) : (
-              'Удалить'
+              t.deletePost.delete
             )}
           </AlertDialogAction>
         </AlertDialogFooter>
