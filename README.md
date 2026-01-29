@@ -1,71 +1,22 @@
-# Welcome to your Lovable project
+SafeAir Pro: Чистый воздух Казахстана
+SafeAir Pro — это цифровая платформа для интеллектуального мониторинга качества воздуха, разработанная для обеспечения экологической безопасности жителей Казахстана. Проект объединяет современные технологии веб-разработки и экологическую аналитику для защиты здоровья населения.
 
-## Project info
+Почему это важно?
+В условиях индустриального развития мониторинг атмосферы становится критически важным. SafeAir Pro переводит сложные технические данные в понятные рекомендации, помогая людям принимать правильные решения для своего здоровья в режиме реального времени.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Основные возможности проекта:
+Интерактивный Дашборд: Наглядное отображение индекса AQI, температуры и влажности с привязкой к геолокации (г. Караганда).
 
-## How can I edit this code?
+Умные рекомендации: Система автоматически генерирует советы для разных групп (дети, взрослые, люди с хроническими заболеваниями) в зависимости от текущего уровня загрязнения.
 
-There are several ways of editing your application.
+Анализ рисков: Оценка погодных условий и качества воздуха для определения лучшего времени для прогулок.
 
-**Use Lovable**
+Эко-мотивация: Визуализация личного вклада пользователя в улучшение экологии региона.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+Технологический фундамент:
+Платформа разработана с использованием языка TypeScript и библиотеки React, что обеспечивает высокую скорость работы и стабильность. Для создания современного интерфейса применены технологии Tailwind CSS и Shadcn UI, обеспечивающие идеальное отображение на любых устройствах.
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
+SafeAir Pro — твой персональный щит в мире экологии.
 Yes, you can!
 
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
