@@ -1,4 +1,5 @@
 import { Factory, Car, Flame, Building, AlertTriangle, MapPin } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PollutionSource {
   id: number;
@@ -10,10 +11,10 @@ interface PollutionSource {
 }
 
 const pollutionSources: PollutionSource[] = [
-  { id: 1, name: "ТЭЦ-2", type: "industrial", severity: "high", distance: "2.5 км", impact: 45 },
-  { id: 2, name: "Пр. Абая / Саина", type: "traffic", severity: "medium", distance: "0.8 км", impact: 28 },
-  { id: 3, name: "Стройка ЖК Алатау", type: "construction", severity: "low", distance: "1.2 км", impact: 15 },
-  { id: 4, name: "Горящий полигон", type: "fire", severity: "critical", distance: "5.0 км", impact: 65 },
+  { id: 1, name: "ТЭЦ-2", type: "industrial", severity: "high", distance: "2.5", impact: 45 },
+  { id: 2, name: "Пр. Абая / Саина", type: "traffic", severity: "medium", distance: "0.8", impact: 28 },
+  { id: 3, name: "Стройка ЖК Алатау", type: "construction", severity: "low", distance: "1.2", impact: 15 },
+  { id: 4, name: "Горящий полигон", type: "fire", severity: "critical", distance: "5.0", impact: 65 },
 ];
 
 const getTypeIcon = (type: PollutionSource["type"]) => {
@@ -25,25 +26,27 @@ const getTypeIcon = (type: PollutionSource["type"]) => {
   }
 };
 
-const getSeverityColor = (severity: PollutionSource["severity"]) => {
-  switch (severity) {
-    case "low": return "bg-aqi-good text-primary-foreground";
-    case "medium": return "bg-aqi-moderate text-foreground";
-    case "high": return "bg-aqi-unhealthy text-primary-foreground";
-    case "critical": return "bg-aqi-hazardous text-primary-foreground";
-  }
-};
-
-const getSeverityLabel = (severity: PollutionSource["severity"]) => {
-  switch (severity) {
-    case "low": return "Низкий";
-    case "medium": return "Средний";
-    case "high": return "Высокий";
-    case "critical": return "Критический";
-  }
-};
-
 export const PollutionMap = () => {
+  const { t } = useLanguage();
+
+  const getSeverityColor = (severity: PollutionSource["severity"]) => {
+    switch (severity) {
+      case "low": return "bg-aqi-good text-primary-foreground";
+      case "medium": return "bg-aqi-moderate text-foreground";
+      case "high": return "bg-aqi-unhealthy text-primary-foreground";
+      case "critical": return "bg-aqi-hazardous text-primary-foreground";
+    }
+  };
+
+  const getSeverityLabel = (severity: PollutionSource["severity"]) => {
+    switch (severity) {
+      case "low": return t.pollutionSources.low;
+      case "medium": return t.pollutionSources.medium;
+      case "high": return t.pollutionSources.high;
+      case "critical": return t.pollutionSources.critical;
+    }
+  };
+
   return (
     <div className="glass-card rounded-2xl overflow-hidden shadow-elevated animate-fade-in">
       {/* Map placeholder with gradient overlay */}
@@ -104,7 +107,7 @@ export const PollutionMap = () => {
       <div className="p-4">
         <h3 className="font-display font-bold text-lg mb-4 flex items-center gap-2">
           <AlertTriangle className="w-5 h-5 text-accent" />
-          Источники загрязнения поблизости
+          {t.pollutionSources.nearYou}
         </h3>
         <div className="space-y-3">
           {pollutionSources.map((source) => {
@@ -120,14 +123,14 @@ export const PollutionMap = () => {
                   </div>
                   <div>
                     <p className="font-medium group-hover:text-primary transition-colors">{source.name}</p>
-                    <p className="text-sm text-muted-foreground">{source.distance} от вас</p>
+                    <p className="text-sm text-muted-foreground">{source.distance} {t.units.km} {t.units.fromYou}</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${getSeverityColor(source.severity)}`}>
                     {getSeverityLabel(source.severity)}
                   </span>
-                  <p className="text-sm text-muted-foreground mt-1">Вклад: {source.impact}%</p>
+                  <p className="text-sm text-muted-foreground mt-1">{t.units.contribution}: {source.impact}%</p>
                 </div>
               </div>
             );

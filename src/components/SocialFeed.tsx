@@ -4,8 +4,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useCommunityPosts } from "@/hooks/useCommunityPosts";
 import { useAuthContext } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { formatDistanceToNow } from "date-fns";
-import { ru } from "date-fns/locale";
+import { ru, enUS, kk } from "date-fns/locale";
 import { EditPostDialog } from "./EditPostDialog";
 import { ReportPostDialog } from "./ReportPostDialog";
 import { DeletePostDialog } from "./DeletePostDialog";
@@ -37,11 +38,20 @@ const getActionColor = (type: string) => {
 
 export const SocialFeed = ({ onRefreshNeeded }: SocialFeedProps) => {
   const { user } = useAuthContext();
+  const { t, language } = useLanguage();
   const { posts, isLoading, likePost, refreshPosts, deletePost, pinPost } = useCommunityPosts();
   const [editingPost, setEditingPost] = useState<{ id: string; content: string; impact_description: string | null } | null>(null);
   const [reportingPostId, setReportingPostId] = useState<string | null>(null);
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
   const [pinningPostId, setPinningPostId] = useState<string | null>(null);
+
+  const getDateLocale = () => {
+    switch (language) {
+      case 'en': return enUS;
+      case 'kz': return kk;
+      default: return ru;
+    }
+  };
 
   const handleLike = (postId: string) => {
     if (!user) return;
@@ -56,9 +66,9 @@ export const SocialFeed = ({ onRefreshNeeded }: SocialFeedProps) => {
     if (!deletingPostId) return false;
     const success = await deletePost(deletingPostId);
     if (success) {
-      toast({ title: "Пост удален", description: "Ваш пост был успешно удален" });
+      toast({ title: t.feed.postDeleted, description: t.feed.postDeletedSuccess });
     } else {
-      toast({ title: "Ошибка", description: "Не удалось удалить пост", variant: "destructive" });
+      toast({ title: t.toast.error, description: t.editPost.failedToUpdate, variant: "destructive" });
     }
     return success;
   };
@@ -69,13 +79,13 @@ export const SocialFeed = ({ onRefreshNeeded }: SocialFeedProps) => {
     setPinningPostId(null);
     if (success) {
       toast({ 
-        title: shouldPin ? "Пост закреплен" : "Пост откреплен", 
-        description: shouldPin ? "Пост будет отображаться в начале ленты" : "Пост больше не закреплен" 
+        title: shouldPin ? t.feed.postPinned : t.feed.postUnpinned, 
+        description: shouldPin ? t.feed.postPinnedDesc : t.feed.postUnpinnedDesc 
       });
     } else {
       toast({ 
-        title: "Ошибка", 
-        description: shouldPin ? "Не удалось закрепить пост. Возможно, контент не соответствует требованиям." : "Не удалось открепить пост", 
+        title: t.toast.error, 
+        description: shouldPin ? t.feed.pinError : t.feed.unpinError, 
         variant: "destructive" 
       });
     }
@@ -94,12 +104,12 @@ export const SocialFeed = ({ onRefreshNeeded }: SocialFeedProps) => {
   return (
     <div className="glass-card rounded-2xl p-6 shadow-elevated animate-slide-up">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="font-display font-bold text-lg">🌍 Эко-сообщество</h3>
+        <h3 className="font-display font-bold text-lg">🌍 {t.feed.ecoCommunity}</h3>
         <button 
           onClick={refreshPosts}
           className="text-sm text-primary font-medium hover:underline"
         >
-          Обновить
+          {t.feed.refresh}
         </button>
       </div>
 
@@ -107,15 +117,15 @@ export const SocialFeed = ({ onRefreshNeeded }: SocialFeedProps) => {
         {posts.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>Пока нет постов</p>
-            <p className="text-sm">Будьте первым, кто поделится эко-действием!</p>
+            <p>{t.feed.noPosts}</p>
+            <p className="text-sm">{t.feed.beFirst}</p>
           </div>
         ) : (
           posts.map((post) => {
             const Icon = getActionIcon(post.post_type);
             const timeAgo = formatDistanceToNow(new Date(post.created_at), { 
               addSuffix: true, 
-              locale: ru 
+              locale: getDateLocale() 
             });
             const isOwner = user?.id === post.user_id;
             
@@ -132,7 +142,7 @@ export const SocialFeed = ({ onRefreshNeeded }: SocialFeedProps) => {
                 {post.is_pinned && (
                   <div className="flex items-center gap-1.5 text-primary text-xs font-medium mb-2">
                     <Pin className="w-3 h-3" />
-                    <span>Закреплено</span>
+                    <span>{t.feed.pinned}</span>
                   </div>
                 )}
                 {/* Header */}
@@ -175,14 +185,14 @@ export const SocialFeed = ({ onRefreshNeeded }: SocialFeedProps) => {
                                 impact_description: post.impact_description
                               })}>
                                 <Pencil className="w-4 h-4 mr-2" />
-                                Редактировать
+                                {t.feed.edit}
                               </DropdownMenuItem>
                               <DropdownMenuItem 
                                 onClick={() => setDeletingPostId(post.id)}
                                 className="text-destructive focus:text-destructive"
                               >
                                 <Trash2 className="w-4 h-4 mr-2" />
-                                Удалить
+                                {t.feed.delete}
                               </DropdownMenuItem>
                             </>
                           )}
@@ -193,7 +203,7 @@ export const SocialFeed = ({ onRefreshNeeded }: SocialFeedProps) => {
                                 className="text-destructive focus:text-destructive"
                               >
                                 <Flag className="w-4 h-4 mr-2" />
-                                Пожаловаться
+                                {t.feed.report}
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem 
@@ -203,12 +213,12 @@ export const SocialFeed = ({ onRefreshNeeded }: SocialFeedProps) => {
                                 {post.is_pinned ? (
                                   <>
                                     <PinOff className="w-4 h-4 mr-2" />
-                                    Открепить
+                                    {t.feed.unpin}
                                   </>
                                 ) : (
                                   <>
                                     <Pin className="w-4 h-4 mr-2" />
-                                    Закрепить
+                                    {t.feed.pin}
                                   </>
                                 )}
                               </DropdownMenuItem>
