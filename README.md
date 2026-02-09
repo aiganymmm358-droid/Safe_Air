@@ -17,8 +17,3 @@ SafeAir Pro — это цифровая платформа для интелле
 Платформа разработана с использованием языка TypeScript и библиотеки React, что обеспечивает высокую скорость работы и стабильность. Для создания современного интерфейса применены технологии Tailwind CSS и Shadcn UI, обеспечивающие идеальное отображение на любых устройствах.
 
 SafeAir Pro — твой персональный щит в мире экологии.
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
