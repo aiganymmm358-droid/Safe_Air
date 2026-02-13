@@ -85,28 +85,50 @@ Deno.serve(async (req) => {
     const { action, lat, lng, bounds, city } = await req.json();
 
     // Try real API first, fallback to demo
+    // Kazakhstan bounding box
+    const KZ_BOUNDS = { south: 40.5, north: 55.5, west: 46.5, east: 87.5 };
+    const isInKazakhstan = (lat: number, lng: number) =>
+      lat >= KZ_BOUNDS.south && lat <= KZ_BOUNDS.north && lng >= KZ_BOUNDS.west && lng <= KZ_BOUNDS.east;
+
     if (action === 'getStationsInBounds' && bounds) {
-      const { north, south, east, west } = bounds;
+      // Clamp requested bounds to Kazakhstan
+      const clampedBounds = {
+        south: Math.max(bounds.south, KZ_BOUNDS.south),
+        north: Math.min(bounds.north, KZ_BOUNDS.north),
+        west: Math.max(bounds.west, KZ_BOUNDS.west),
+        east: Math.min(bounds.east, KZ_BOUNDS.east),
+      };
+
+      if (clampedBounds.south >= clampedBounds.north || clampedBounds.west >= clampedBounds.east) {
+        return new Response(
+          JSON.stringify({ success: true, data: [], source: 'none' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const { north: n, south: s, east: e, west: w } = clampedBounds;
       
       if (apiToken) {
-        const url = `https://api.waqi.info/v2/map/bounds?latlng=${south},${west},${north},${east}&token=${apiToken}`;
-        console.log('Fetching stations in bounds:', url.replace(apiToken, 'HIDDEN'));
+        const url = `https://api.waqi.info/v2/map/bounds?latlng=${s},${w},${n},${e}&token=${apiToken}`;
+        console.log('Fetching stations in bounds (KZ only):', url.replace(apiToken, 'HIDDEN'));
         
         try {
           const response = await fetch(url);
           const data = await response.json();
           
           if (data.status === 'ok') {
-            const stations = data.data.map((station: WAQIStation) => ({
-              uid: station.uid,
-              aqi: parseInt(station.aqi) || 0,
-              lat: station.lat,
-              lng: station.lon,
-              name: station.station?.name || 'Unknown Station',
-              time: station.station?.time || new Date().toISOString(),
-            }));
+            const stations = data.data
+              .map((station: WAQIStation) => ({
+                uid: station.uid,
+                aqi: parseInt(station.aqi) || 0,
+                lat: station.lat,
+                lng: station.lon,
+                name: station.station?.name || 'Unknown Station',
+                time: station.station?.time || new Date().toISOString(),
+              }))
+              .filter((st: { lat: number; lng: number }) => isInKazakhstan(st.lat, st.lng));
 
-            console.log(`Found ${stations.length} stations from WAQI API`);
+            console.log(`Found ${stations.length} KZ stations from WAQI API`);
             
             return new Response(
               JSON.stringify({ success: true, data: stations, source: 'waqi' }),
@@ -122,8 +144,8 @@ Deno.serve(async (req) => {
       
       // Fallback to demo data
       console.log('Using demo data for Almaty');
-      const demoStations = getDemoStations().filter(s => 
-        s.lat >= south && s.lat <= north && s.lng >= west && s.lng <= east
+      const demoStations = getDemoStations().filter(st => 
+        st.lat >= s && st.lat <= n && st.lng >= w && st.lng <= e
       );
       
       return new Response(
