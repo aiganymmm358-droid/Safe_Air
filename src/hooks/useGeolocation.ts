@@ -230,6 +230,69 @@ export function useGeolocation() {
     }
   }, [user, getCurrentPosition, getCityName, updateLocation]);
 
+  // Fetch weather data directly from Open-Meteo (no auth needed)
+  const fetchPublicWeatherData = useCallback(async (lat: number, lng: number, cityName?: string) => {
+    try {
+      const [weatherRes, aqiRes] = await Promise.all([
+        fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code,surface_pressure,uv_index&timezone=auto`),
+        fetch(`https://api.waqi.info/feed/geo:${lat};${lng}/?token=demo`),
+      ]);
+
+      const weatherData = await weatherRes.json();
+      const aqiData = await aqiRes.json();
+
+      const getAqiCategory = (aqi: number) => {
+        if (aqi <= 50) return 'Хорошее';
+        if (aqi <= 100) return 'Умеренное';
+        if (aqi <= 150) return 'Вредное для чувствительных';
+        if (aqi <= 200) return 'Вредное';
+        if (aqi <= 300) return 'Очень вредное';
+        return 'Опасное';
+      };
+
+      const getWeatherIcon = (code: number) => {
+        if (code === 0) return '☀️';
+        if (code <= 3) return '⛅';
+        if (code <= 48) return '🌫️';
+        if (code <= 65) return '🌧️';
+        if (code <= 77) return '🌨️';
+        if (code <= 82) return '🌧️';
+        return '⛈️';
+      };
+
+      const currentAqi = aqiData?.status === 'ok' ? aqiData.data?.aqi : null;
+
+      const envData: EnvironmentData = {
+        id: 'local',
+        user_id: 'anonymous',
+        latitude: lat,
+        longitude: lng,
+        city_name: cityName || null,
+        current_aqi: currentAqi ?? null,
+        aqi_category: currentAqi ? getAqiCategory(currentAqi) : null,
+        temperature: weatherData?.current?.temperature_2m ?? null,
+        humidity: weatherData?.current?.relative_humidity_2m ?? null,
+        wind_speed: weatherData?.current?.wind_speed_10m ?? null,
+        weather_description: null,
+        weather_icon: weatherData?.current?.weather_code != null ? getWeatherIcon(weatherData.current.weather_code) : null,
+        uv_index: weatherData?.current?.uv_index ?? null,
+        pressure: weatherData?.current?.surface_pressure ? Math.round(weatherData.current.surface_pressure) : null,
+        visibility: null,
+        updated_at: new Date().toISOString(),
+      };
+
+      setState(prev => ({
+        ...prev,
+        environmentData: envData,
+        location: { latitude: lat, longitude: lng, cityName },
+        isLoading: false,
+      }));
+    } catch (error) {
+      console.error('Error fetching public weather data:', error);
+      setState(prev => ({ ...prev, isLoading: false }));
+    }
+  }, []);
+
   // Initialize on mount
   useEffect(() => {
     const init = async () => {
@@ -257,20 +320,31 @@ export function useGeolocation() {
           const diffMinutes = (now.getTime() - updatedAt.getTime()) / (1000 * 60);
 
           if (diffMinutes > 30) {
-            // Refresh location data
             await requestLocation();
           }
         } else {
-          // No existing data, request location
           await requestLocation();
         }
       } else {
-        setState(prev => ({ ...prev, isLoading: false }));
+        // Not authenticated - fetch public weather data for default location
+        const loc = DEFAULT_LOCATION;
+        setState(prev => ({ ...prev, isLoading: true }));
+        
+        try {
+          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation?.getCurrentPosition(resolve, reject, { timeout: 5000, maximumAge: 300000 });
+          });
+          const cityName = await getCityName(position.coords.latitude, position.coords.longitude);
+          await fetchPublicWeatherData(position.coords.latitude, position.coords.longitude, cityName);
+        } catch {
+          // Fallback to default location
+          await fetchPublicWeatherData(loc.latitude, loc.longitude, loc.cityName);
+        }
       }
     };
 
     init();
-  }, [isAuthenticated, user, checkPermission, fetchEnvironmentData, requestLocation]);
+  }, [isAuthenticated, user, checkPermission, fetchEnvironmentData, requestLocation, getCityName, fetchPublicWeatherData]);
 
   // Use default location as fallback
   const effectiveLocation = state.location || DEFAULT_LOCATION;
