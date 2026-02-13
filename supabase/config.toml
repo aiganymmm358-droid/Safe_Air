@@ -1,0 +1,13 @@
+project_id = "piafxufmgnikjmngdxft"
+
+[functions.waqi-data]
+verify_jwt = false
+
+[functions.user-environment]
+verify_jwt = false
+
+[functions.moderate-content]
+verify_jwt = false
+
+[functions.analyze-ar-image]
+verify_jwt = false
