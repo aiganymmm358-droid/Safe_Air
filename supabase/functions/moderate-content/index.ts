@@ -167,19 +167,19 @@ Deno.serve(async (req) => {
 });
 
 async function checkContentWithAI(content: string): Promise<ModerationResult> {
-  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  const api_key = Deno.env.get('api_key');
   
-  if (!LOVABLE_API_KEY) {
-    console.error('LOVABLE_API_KEY not configured');
+  if (!api_key) {
+    console.error('api_key not configured');
     // Fallback: approve content if AI is not available
     return { isAppropriate: true, isRelevant: true };
   }
 
   try {
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://api.gateway.local/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${api_key}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
