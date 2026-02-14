@@ -1,19 +1,17 @@
-SafeAir Pro: Чистый воздух Казахстана
-SafeAir Pro — это цифровая платформа для интеллектуального мониторинга качества воздуха, разработанная для обеспечения экологической безопасности жителей Казахстана. Проект объединяет современные технологии веб-разработки и экологическую аналитику для защиты здоровья населения.
+SafeAir Pro: Clean Air of Kazakhstan
 
-Почему это важно?
-В условиях индустриального развития мониторинг атмосферы становится критически важным. SafeAir Pro переводит сложные технические данные в понятные рекомендации, помогая людям принимать правильные решения для своего здоровья в режиме реального времени.
+SafeAir Pro is a digital platform for intelligent air quality monitoring, designed to ensure the environmental safety of Kazakhstan’s residents. The project combines modern web development technologies with environmental analytics to help protect public health.
 
-Основные возможности проекта:
-Интерактивный Дашборд: Наглядное отображение индекса AQI, температуры и влажности с привязкой к геолокации (г. Караганда).
+Why is this important?
+In the context of rapid industrial development, atmospheric monitoring has become critically important. SafeAir Pro transforms complex technical data into clear, actionable recommendations, enabling people to make informed decisions about their health in real time.
 
-Умные рекомендации: Система автоматически генерирует советы для разных групп (дети, взрослые, люди с хроническими заболеваниями) в зависимости от текущего уровня загрязнения.
+Key Features of the Project:
+	•	Interactive Dashboard: Clear visualization of the AQI index, temperature, and humidity with geolocation integration (Karaganda).
+	•	Smart Recommendations: The system automatically generates personalized advice for different groups (children, adults, people with chronic conditions) based on the current pollution level.
+	•	Risk Analysis: Evaluation of weather conditions and air quality to determine the best time for outdoor activities.
+	•	Eco-Motivation: Visualization of a user’s personal contribution to improving the region’s environmental condition.
 
-Анализ рисков: Оценка погодных условий и качества воздуха для определения лучшего времени для прогулок.
+Technological Foundation:
+The platform is built using TypeScript and the React library, ensuring high performance and stability. Tailwind CSS and Shadcn UI are used to create a modern interface with seamless display across all devices.
 
-Эко-мотивация: Визуализация личного вклада пользователя в улучшение экологии региона.
-
-Технологический фундамент:
-Платформа разработана с использованием языка TypeScript и библиотеки React, что обеспечивает высокую скорость работы и стабильность. Для создания современного интерфейса применены технологии Tailwind CSS и Shadcn UI, обеспечивающие идеальное отображение на любых устройствах.
-
-SafeAir Pro — твой персональный щит в мире экологии.
+SafeAir Pro — your personal shield in the world of ecology.
